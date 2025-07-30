@@ -1,1 +1,1 @@
-# atomic-rider-plugin
+Здесь будет ридми

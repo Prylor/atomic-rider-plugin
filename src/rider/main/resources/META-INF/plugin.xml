@@ -1,0 +1,183 @@
+<idea-plugin require-restart="true">
+  <id>com.jetbrains.rider.plugins.atomicplugin</id>
+  <name>Entity API Generator</name>
+  <version>_PLACEHOLDER_</version>
+  <vendor url="https://project-url">Author</vendor>
+  <idea-version since-build="_PLACEHOLDER_" until-build="_PLACEHOLDER_" />
+  <depends>com.intellij.modules.rider</depends>
+
+  <description>
+<![CDATA[
+<p>Entity API Code Generator for Rider</p>
+<p>This plugin provides code generation functionality for interfaces marked with the [EntityAPI] attribute.</p>
+<p>Features:</p>
+<ul>
+  <li>Context action to generate Entity API extension methods</li>
+  <li>Automatic detection of [EntityAPI] attributes</li>
+  <li>Support for tag enums and properties</li>
+  <li>Configurable code generation options</li>
+</ul>
+<p>Usage: Place cursor on an interface with [EntityAPI] attribute and press Alt+Enter to see the "Generate Entity API" action.</p>
+<p>Also supports .atomic configuration files for defining Entity API generation.</p>
+]]>
+  </description>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Atomic Language Support -->
+    <fileType
+        name="Atomic File"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicFileType"
+        fieldName="INSTANCE"
+        language="Atomic"
+        extensions="atomic"/>
+
+    <lang.parserDefinition
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicParserDefinition"/>
+    
+    <!-- Editor Features -->
+    <lang.syntaxHighlighterFactory
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicSyntaxHighlighterFactory"/>
+    
+    <colorSettingsPage
+        implementation="com.jetbrains.rider.plugins.atomic.language.AtomicColorSettingsPage"/>
+    
+    <completion.contributor
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicCompletionContributor"/>
+    
+    <annotator
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicAnnotator"/>
+    
+    <lang.findUsagesProvider
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicFindUsagesProvider"/>
+    
+    <highlightUsagesHandlerFactory
+        implementation="com.jetbrains.rider.plugins.atomic.language.AtomicHighlightUsagesHandlerFactory"/>
+    
+    <annotator
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicTypeHighlightingAnnotator"
+        order="after com.jetbrains.rider.plugins.atomic.language.AtomicAnnotator"/>
+    
+    <lang.foldingBuilder
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.language.AtomicFoldingBuilder"/>
+    
+    <typedHandler
+        implementation="com.jetbrains.rider.plugins.atomic.language.AtomicTypedHandler"/>
+    
+    <!-- Reference and Usage Search -->
+    <psi.referenceContributor
+        language="Atomic"
+        implementation="com.jetbrains.rider.plugins.atomic.references.AtomicValueReferenceContributor"/>
+    
+    <referencesSearch
+        implementation="com.jetbrains.rider.plugins.atomic.search.AtomicValueUsageSearcher"/>
+    
+    <referencesSearch
+        implementation="com.jetbrains.rider.plugins.atomic.search.AtomicTagUsageSearcher"/>
+    
+    <lang.findUsagesProvider
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.findUsages.AtomicFindUsagesProvider"/>
+    
+    <elementDescriptionProvider
+        implementation="com.jetbrains.rider.plugins.atomic.findUsages.AtomicElementDescriptionProvider"/>
+    
+    <!-- Refactoring Support -->
+    <lang.refactoringSupport
+        language="Atomic"
+        implementationClass="com.jetbrains.rider.plugins.atomic.refactoring.AtomicRefactoringSupportProvider"/>
+    
+    <!-- Element Manipulators -->
+    <lang.elementManipulator
+        forClass="com.jetbrains.rider.plugins.atomic.psi.AtomicValueItem"
+        implementationClass="com.jetbrains.rider.plugins.atomic.refactoring.AtomicValueManipulator"/>
+    
+    <lang.elementManipulator
+        forClass="com.jetbrains.rider.plugins.atomic.psi.AtomicTagItem"
+        implementationClass="com.jetbrains.rider.plugins.atomic.refactoring.AtomicTagManipulator"/>
+    
+    <!-- Rename Processor -->
+    <renamePsiElementProcessor
+        implementation="com.jetbrains.rider.plugins.atomic.refactoring.AtomicRenameProcessor"/>
+    
+    <!-- File Editor Listener -->
+    <fileEditorManagerListener
+        implementation="com.jetbrains.rider.plugins.atomic.listeners.AtomicFileEditorListener"/>
+    
+    <!-- Startup Activity -->
+    <postStartupActivity
+        implementation="com.jetbrains.rider.plugins.atomic.startup.AtomicStartupActivity"/>
+    
+    <!-- Main plugin startup -->
+    <postStartupActivity
+        implementation="com.jetbrains.rider.plugins.atomic.startup.AtomicPluginStartup"/>
+    
+    <!-- File watcher startup -->
+    <postStartupActivity
+        implementation="com.jetbrains.rider.plugins.atomic.startup.AtomicFileWatcher"/>
+    
+    <!-- File Templates -->
+    <fileTemplateGroup
+        implementation="com.jetbrains.rider.plugins.atomic.fileTemplates.AtomicFileTemplateProvider"/>
+  </extensions>
+  
+  <applicationListeners>
+    <!-- File change listener for automatic regeneration -->
+    <listener class="com.jetbrains.rider.plugins.atomic.listeners.AtomicFileChangeListener"
+              topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+  </applicationListeners>
+
+  <actions>
+    <!-- Generate API from Atomic file -->
+    <action id="AtomicPlugin.GenerateApi"
+            class="com.jetbrains.rider.plugins.atomic.actions.AtomicGenerateApiAction"
+            text="Generate Entity API"
+            description="Generate C# API from .atomic file">
+      <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu1"/>
+      <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="ProjectViewPopupMenuModifyGroup"/>
+      <keyboard-shortcut first-keystroke="ctrl shift G" keymap="$default"/>
+    </action>
+    
+    <!-- Find Usages for Atomic Values -->
+    <action id="AtomicPlugin.FindUsages"
+            class="com.jetbrains.rider.plugins.atomic.actions.AtomicFindUsagesAction"
+            text="Find Usages of Generated Methods"
+            description="Find usages of generated methods from atomic values">
+      <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="FindUsages"/>
+      <override-text place="EditorPopupMenu" text="Find Usages"/>
+    </action>
+    
+    <!-- Test Auto Generation Action -->
+    <action id="AtomicPlugin.TestAutoGeneration"
+            class="com.jetbrains.rider.plugins.atomic.actions.TestAutoGenerationAction"
+            text="Test Auto Generation"
+            description="Test automatic generation for debugging">
+      <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="AtomicPlugin.GenerateApi"/>
+      <keyboard-shortcut first-keystroke="ctrl shift T" keymap="$default"/>
+    </action>
+    
+    <!-- Diagnose Auto Generation Action -->
+    <action id="AtomicPlugin.DiagnoseAutoGeneration"
+            class="com.jetbrains.rider.plugins.atomic.actions.DiagnoseAutoGenerationAction"
+            text="Diagnose Auto Generation"
+            description="Show diagnostic information for auto generation">
+      <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="AtomicPlugin.TestAutoGeneration"/>
+      <keyboard-shortcut first-keystroke="ctrl shift D" keymap="$default"/>
+    </action>
+    
+    <!-- Create Atomic File Action -->
+    <action id="AtomicPlugin.CreateAtomicFile"
+            class="com.jetbrains.rider.plugins.atomic.actions.CreateAtomicFileAction"
+            text="Atomic File"
+            description="Create new Atomic configuration file">
+      <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
+    </action>
+  </actions>
+
+</idea-plugin>

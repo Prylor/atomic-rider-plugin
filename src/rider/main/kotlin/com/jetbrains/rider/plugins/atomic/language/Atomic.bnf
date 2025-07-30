@@ -1,0 +1,110 @@
+{
+  parserClass="com.jetbrains.rider.plugins.atomic.parser.AtomicParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Atomic"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.jetbrains.rider.plugins.atomic.psi"
+  psiImplPackage="com.jetbrains.rider.plugins.atomic.psi.impl"
+
+  elementTypeHolderClass="com.jetbrains.rider.plugins.atomic.psi.AtomicTypes"
+  elementTypeClass="com.jetbrains.rider.plugins.atomic.psi.AtomicElementType"
+  tokenTypeClass="com.jetbrains.rider.plugins.atomic.psi.AtomicTokenType"
+
+  psiImplUtilClass="com.jetbrains.rider.plugins.atomic.psi.impl.AtomicPsiImplUtil"
+}
+
+atomicFile ::= file_content
+
+private file_content ::= (header_section | section | COMMENT | CRLF)*
+
+header_section ::= header_property+
+
+private header_property ::= (header_prop | entity_type_prop | aggressive_inlining_prop | unsafe_prop | namespace_prop | class_name_prop | directory_prop | solution_prop)
+
+header_prop ::= HEADER_KEYWORD COLON (STRING | IDENTIFIER) {
+  pin=1
+  methods=[getKey getValue]
+}
+
+entity_type_prop ::= ENTITY_TYPE_KEYWORD COLON IDENTIFIER {
+  pin=1
+  methods=[getKey getValue]
+}
+
+aggressive_inlining_prop ::= AGGRESSIVE_INLINING_KEYWORD COLON (TRUE | FALSE) {
+  pin=1
+  methods=[getKey getBooleanValue]
+}
+
+unsafe_prop ::= UNSAFE_KEYWORD COLON (TRUE | FALSE) {
+  pin=1
+  methods=[getKey getBooleanValue]
+}
+
+namespace_prop ::= NAMESPACE_KEYWORD COLON NAMESPACE_VALUE {
+  pin=1
+  methods=[getKey getValue]
+}
+
+class_name_prop ::= CLASS_NAME_KEYWORD COLON IDENTIFIER {
+  pin=1
+  methods=[getKey getValue]
+}
+
+directory_prop ::= DIRECTORY_KEYWORD COLON (STRING | IDENTIFIER | TYPE_REFERENCE) {
+  pin=1
+  methods=[getKey getValue]
+}
+
+solution_prop ::= SOLUTION_KEYWORD COLON (STRING | IDENTIFIER) {
+  pin=1
+  methods=[getKey getValue]
+}
+
+private section ::= (imports_section | tags_section | values_section)
+
+imports_section ::= IMPORTS_KEYWORD COLON? import_list {
+  pin=1
+  methods=[getImports]
+}
+
+private import_list ::= import_item*
+
+import_item ::= HYPHEN IMPORT_PATH {
+  pin=1
+  methods=[getImportPath]
+}
+
+tags_section ::= TAGS_KEYWORD COLON? tag_list {
+  pin=1
+  methods=[getTags]
+}
+
+private tag_list ::= tag_item*
+
+tag_item ::= HYPHEN TAG_NAME {
+  pin=1
+  methods=[getTagName]
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+  mixin="com.jetbrains.rider.plugins.atomic.psi.impl.AtomicTagItemImplExt"
+}
+
+values_section ::= VALUES_KEYWORD COLON? value_list {
+  pin=1
+  methods=[getValues]
+}
+
+private value_list ::= (value_item | value_comment)*
+
+value_item ::= HYPHEN VALUE_NAME COLON type_expression {
+  pin=1
+  methods=[getValueName getTypeReference]
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+  mixin="com.jetbrains.rider.plugins.atomic.psi.impl.AtomicValueItemImplExt"
+}
+
+private type_expression ::= TYPE_REFERENCE+
+
+private value_comment ::= COMMENT
