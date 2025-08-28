@@ -103,7 +103,7 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
             logger.info("Sending generation request for: ${fileData.filePath}")
             logger.info("Parsed file data - Headers: ${fileData.headerProperties.size}, Values: ${fileData.values.size}")
             
-            val generatedCode = model.generateApi.sync(fileData)
+            val generatedCode = model.generateApi.startSuspending(componentLifetime, fileData)
             
             logger.info("Generation completed successfully")
             generatedCode
@@ -123,8 +123,12 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 namespaceFilter = namespaceFilter
             )
             
-            val response = model.getTypeCompletions.sync(request)
+            val response = model.getTypeCompletions.startSuspending(componentLifetime, request)
             response.items.toList()
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            emptyList()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to get type completions", e)
             emptyList()
@@ -139,7 +143,11 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 projectPath = projectPath
             )
             
-            model.validateType.sync(request)
+            model.validateType.startSuspending(componentLifetime, request)
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            null
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to validate type", e)
             null
@@ -148,7 +156,7 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
 
     suspend fun getAvailableProjects(): List<String> {
         return try {
-            model.getAvailableProjects.sync(Unit).toList()
+            model.getAvailableProjects.startSuspending(componentLifetime, Unit).toList()
         } catch (e: Exception) {
             logger.error("Failed to get available projects", e)
             emptyList()
@@ -162,8 +170,12 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 projectPath = projectPath
             )
             
-            val response = model.getNamespaceCompletions.sync(request)
+            val response = model.getNamespaceCompletions.startSuspending(componentLifetime, request)
             response.namespaces.toList()
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            emptyList()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to get namespace completions", e)
             emptyList()
@@ -177,7 +189,11 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 projectPath = projectPath
             )
             
-            model.validateNamespace.sync(request)
+            model.validateNamespace.startSuspending(componentLifetime, request)
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            null
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to validate namespace", e)
             null
@@ -279,7 +295,7 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 generatedFilePath = generatedFilePath
             )
             
-            val response = model.findMethodUsages.sync(request)
+            val response = model.findMethodUsages.startSuspending(componentLifetime, request)
             response.usages.toList()
         } catch (e: Exception) {
             logger.error("Failed to find method usages", e)
@@ -296,7 +312,7 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 generatedFilePath = generatedFilePath
             )
             
-            val response = model.findTagUsages.sync(request)
+            val response = model.findTagUsages.startSuspending(componentLifetime, request)
             response.usages.toList()
         } catch (e: Exception) {
             logger.error("Failed to find tag usages", e)

@@ -16,7 +16,7 @@ class AtomicFoldingBuilder : FoldingBuilderEx(), DumbAware {
     override fun buildFoldRegions(root: PsiElement, document: Document, quick: Boolean): Array<FoldingDescriptor> {
         val descriptors = mutableListOf<FoldingDescriptor>()
         
-        if (root !is AtomicFile) return FoldingDescriptor.EMPTY
+        if (root !is AtomicFile) return emptyArray()
         
         
         val headerSection = PsiTreeUtil.findChildOfType(root, AtomicHeaderSection::class.java)

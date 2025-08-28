@@ -9,8 +9,23 @@ import com.jetbrains.rider.plugins.atomic.psi.impl.AtomicPsiImplUtil
 import com.jetbrains.rider.plugins.atomic.services.AtomicGenerationService
 import kotlinx.coroutines.runBlocking
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import com.intellij.openapi.application.ReadAction
+import java.util.concurrent.ConcurrentHashMap
+import com.jetbrains.rider.plugins.atomic.model.TypeValidationResponse
+import com.jetbrains.rider.plugins.atomic.model.NamespaceValidationResponse
 
 class AtomicAnnotator : Annotator {
+    
+    companion object {
+        // Track pending validations to avoid duplicate requests
+        private val pendingValidations = ConcurrentHashMap<String, Boolean>()
+        private const val VALIDATION_TIMEOUT_MS = 100L // Quick timeout for annotations
+    }
     
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         
@@ -461,23 +476,53 @@ class AtomicAnnotator : Annotator {
                 return 
             }
             
+            val validationKey = "type_${fullTypeNameWithoutGenerics}_${imports.joinToString(",")}"
             
             val validationResult = runBlocking {
-                try {
-                    
-                    service.validateType(fullTypeNameWithoutGenerics, imports, project.basePath ?: "")
-                } catch (e: Exception) {
-                    null
+                withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                    try {
+                        service.validateType(fullTypeNameWithoutGenerics, imports, project.basePath ?: "")
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
             }
             
-            if (validationResult == null || !validationResult.isValid) {
+            if (validationResult == null) {
+                if (!pendingValidations.containsKey(validationKey)) {
+                    pendingValidations[validationKey] = true
+                    
+                    GlobalScope.launch(Dispatchers.IO) {
+                        try {
+                            service.validateType(fullTypeNameWithoutGenerics, imports, project.basePath ?: "")
+                            
+                            withContext(Dispatchers.Main) {
+                                ReadAction.run<Exception> {
+                                    if (valueItem.isValid) {
+                                        val file = valueItem.containingFile
+                                        if (file != null && file.isValid) {
+                                            DaemonCodeAnalyzer.getInstance(project).restart(file)
+                                        }
+                                    }
+                                }
+                            }
+                        } finally {
+                            pendingValidations.remove(validationKey)
+                        }
+                    }
+                }
+                return
+            }
+            
+            if (!validationResult.isValid) {
                 
                 val namespaceValidation = runBlocking {
-                    try {
-                        service.validateNamespace(fullTypeNameWithoutGenerics, project.basePath ?: "")
-                    } catch (e: Exception) {
-                        null
+                    withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                        try {
+                            service.validateNamespace(fullTypeNameWithoutGenerics, project.basePath ?: "")
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
                 }
                 
@@ -537,7 +582,13 @@ class AtomicAnnotator : Annotator {
         try {
             
             val validationResult = runBlocking {
-                service.validateType(typeNameWithoutArray, imports, project.basePath ?: "")
+                withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                    try {
+                        service.validateType(typeNameWithoutArray, imports, project.basePath ?: "")
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
             }
             
             if (validationResult != null) {
@@ -709,9 +760,47 @@ class AtomicAnnotator : Annotator {
         }
         
         try {
+            val validationKey = "namespace_$namespace"
             
+            // Try to get validation result with a very short timeout
             val validationResult = runBlocking {
-                service.validateNamespace(namespace, project.basePath ?: "")
+                withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                    try {
+                        service.validateNamespace(namespace, project.basePath ?: "")
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            }
+            
+            if (validationResult == null) {
+                // Validation timed out, schedule async validation if not already pending
+                if (!pendingValidations.containsKey(validationKey)) {
+                    pendingValidations[validationKey] = true
+                    
+                    // Do validation in background and re-annotate when done
+                    GlobalScope.launch(Dispatchers.IO) {
+                        try {
+                            service.validateNamespace(namespace, project.basePath ?: "")
+                            
+                            // Re-annotate the file when validation completes
+                            // Must switch to EDT and use read action for PSI access
+                            withContext(Dispatchers.Main) {
+                                ReadAction.run<Exception> {
+                                    if (importItem.isValid) {
+                                        val file = importItem.containingFile
+                                        if (file != null && file.isValid) {
+                                            DaemonCodeAnalyzer.getInstance(project).restart(file)
+                                        }
+                                    }
+                                }
+                            }
+                        } finally {
+                            pendingValidations.remove(validationKey)
+                        }
+                    }
+                }
+                return // Skip annotation for now
             }
             
             if (validationResult != null && !validationResult.isValid) {
@@ -827,19 +916,23 @@ class AtomicAnnotator : Annotator {
         
         val importsWithoutTarget = allImports.filter { it != targetNamespace }
         val validationWithout = runBlocking {
-            try {
-                service.validateType(mainTypeName, importsWithoutTarget, projectPath)
-            } catch (e: Exception) {
-                null
+            withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                try {
+                    service.validateType(mainTypeName, importsWithoutTarget, projectPath)
+                } catch (e: Exception) {
+                    null
+                }
             }
         }
         
         
         val validationWith = runBlocking {
-            try {
-                service.validateType(mainTypeName, allImports, projectPath)
-            } catch (e: Exception) {
-                null
+            withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                try {
+                    service.validateType(mainTypeName, allImports, projectPath)
+                } catch (e: Exception) {
+                    null
+                }
             }
         }
         
@@ -903,10 +996,12 @@ class AtomicAnnotator : Annotator {
             }
             
             val validationResult = runBlocking {
-                try {
-                    service.validateType(fullTypeNameWithoutGenerics, imports, project.basePath ?: "")
-                } catch (e: Exception) {
-                    null
+                withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                    try {
+                        service.validateType(fullTypeNameWithoutGenerics, imports, project.basePath ?: "")
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
             }
             
@@ -942,7 +1037,13 @@ class AtomicAnnotator : Annotator {
         
         try {
             val validationResult = runBlocking {
-                service.validateType(typeNameWithoutArray, imports, project.basePath ?: "")
+                withTimeoutOrNull(VALIDATION_TIMEOUT_MS) {
+                    try {
+                        service.validateType(typeNameWithoutArray, imports, project.basePath ?: "")
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
             }
             
             if (validationResult != null) {
