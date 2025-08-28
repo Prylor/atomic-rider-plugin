@@ -1,5 +1,6 @@
 package com.jetbrains.rider.plugins.atomic.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -50,6 +51,10 @@ class AtomicFindUsagesAction : AnAction("Find Usages of Generated Methods"), Dum
         val valueElement = element?.let { findValueElement(it) }
         
         e.presentation.isEnabledAndVisible = valueElement != null
+    }
+    
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
     
     private fun findValueElement(element: PsiElement): PsiElement? {

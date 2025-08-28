@@ -1,5 +1,6 @@
 package com.jetbrains.rider.plugins.atomic.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -15,7 +16,9 @@ import kotlinx.coroutines.runBlocking
  */
 class TestAutoGenerationAction : AnAction("Test Auto Generation") {
     
-    override fun getActionUpdateThread() = com.intellij.openapi.actionSystem.ActionUpdateThread.BGT
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
     
     companion object {
         private val LOG = Logger.getInstance(TestAutoGenerationAction::class.java)

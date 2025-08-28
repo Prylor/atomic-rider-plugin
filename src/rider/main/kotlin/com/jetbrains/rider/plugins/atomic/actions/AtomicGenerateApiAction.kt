@@ -1,5 +1,6 @@
 package com.jetbrains.rider.plugins.atomic.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -81,6 +82,10 @@ class AtomicGenerateApiAction : AnAction("Generate Entity API", "Generate C# API
     override fun update(e: AnActionEvent) {
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
         e.presentation.isEnabledAndVisible = virtualFile?.fileType == AtomicFileType
+    }
+    
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
     
     private fun parseHeaderProperties(atomicFile: AtomicFile): Map<String, String> {

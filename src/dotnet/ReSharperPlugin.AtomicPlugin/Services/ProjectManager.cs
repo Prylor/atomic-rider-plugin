@@ -397,7 +397,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
                 var shellLocks = _solution.GetComponent<IShellLocks>();
                 var result = false;
 
-                shellLocks.ExecuteOrQueueEx(_solution.GetLifetime(), "AddFileToProject", () =>
+                shellLocks.ExecuteOrQueueEx(_solution.GetSolutionLifetimes().UntilSolutionCloseLifetime, "AddFileToProject", () =>
                 {
                     using (WriteLockCookie.Create())
                     {

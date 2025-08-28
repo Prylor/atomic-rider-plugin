@@ -177,6 +177,15 @@ dependencies {
     }
 }
 
+intellijPlatform {
+    pluginVerification {
+        ides {
+            ide("RD", "2025.1.6")
+            ide("RD", "2025.2.0.1")
+        }
+    }
+}
+
 tasks.runIde {
     // Match Rider's default heap size of 1.5Gb (default for runIde is 512Mb)
     maxHeapSize = "1500m"

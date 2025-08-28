@@ -1,5 +1,6 @@
 package com.jetbrains.rider.plugins.atomic.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -17,7 +18,9 @@ import com.jetbrains.rider.plugins.atomic.settings.AtomicPluginSettings
  */
 class DiagnoseAutoGenerationAction : AnAction("Diagnose Auto Generation") {
     
-    override fun getActionUpdateThread() = com.intellij.openapi.actionSystem.ActionUpdateThread.BGT
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
     
     companion object {
         private val LOG = Logger.getInstance(DiagnoseAutoGenerationAction::class.java)

@@ -34,15 +34,17 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
     private val pendingFiles = mutableSetOf<PsiFile>()
     
     init {
-        model.generationStatus.advise(componentLifetime) { status ->
-            logger.info("Generation status: $status")
-        }
-        
-        project.solution.isLoaded.advise(componentLifetime) { isLoaded ->
-            if (isLoaded) {
-                GlobalScope.launch {
-                    delay(1000)
-                    checkBackendReadiness()
+        project.protocol.scheduler.invokeOrQueue {
+            model.generationStatus.advise(componentLifetime) { status ->
+                logger.info("Generation status: $status")
+            }
+            
+            project.solution.isLoaded.advise(componentLifetime) { isLoaded ->
+                if (isLoaded) {
+                    GlobalScope.launch {
+                        delay(1000)
+                        checkBackendReadiness()
+                    }
                 }
             }
         }

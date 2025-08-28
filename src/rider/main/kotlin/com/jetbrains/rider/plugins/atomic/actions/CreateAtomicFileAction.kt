@@ -1,6 +1,7 @@
 package com.jetbrains.rider.plugins.atomic.actions
 
 import com.intellij.ide.actions.CreateElementActionBase
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.application.ApplicationManager
@@ -136,6 +137,10 @@ class CreateAtomicFileAction : CreateElementActionBase(
         val project = CommonDataKeys.PROJECT.getData(dataContext) ?: return false
         val directory = CommonDataKeys.PSI_ELEMENT.getData(dataContext) as? PsiDirectory
         return directory != null && super.isAvailable(dataContext)
+    }
+    
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
     
     private fun processDirectoryPath(inputPath: String, project: Project): String {
