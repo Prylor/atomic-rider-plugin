@@ -5,11 +5,11 @@
     <!-- Keep in sync with ProductVersion in gradle.properties -->
     <SdkVersion>2025.1.0</SdkVersion>
 
-    <Title>AtomicPlugin</Title>
-    <Description>Description</Description>
+    <Title>Atomic</Title>
+    <Description>Code Generator for Atomic Framework - Reactive Procedural Game Framework</Description>
 
-    <Authors>Author</Authors>
-    <Copyright>Copyright $([System.DateTime]::Now.Year) Maintainers of AtomicPlugin</Copyright>
+    <Authors>Iaroslav Sarchuk</Authors>
+    <Copyright>Copyright $([System.DateTime]::Now.Year) Iaroslav Sarchuk</Copyright>
     <PackageTags>resharper plugin</PackageTags>
 
     <PackageProjectUrl></PackageProjectUrl>

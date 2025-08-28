@@ -1,24 +1,39 @@
 <idea-plugin require-restart="true">
-  <id>com.jetbrains.rider.plugins.atomicplugin</id>
-  <name>Entity API Generator</name>
-  <version>_PLACEHOLDER_</version>
-  <vendor url="https://project-url">Author</vendor>
-  <idea-version since-build="_PLACEHOLDER_" until-build="_PLACEHOLDER_" />
+  <id>com.sarchuk.atomic</id>
+  <name>Atomic</name>
+  <version>0.1.0</version>
+  <vendor>Iaroslav Sarchuk</vendor>
+  <idea-version since-build="241.14494" until-build="251.*" />
   <depends>com.intellij.modules.rider</depends>
 
   <description>
 <![CDATA[
-<p>Entity API Code Generator for Rider</p>
-<p>This plugin provides code generation functionality for interfaces marked with the [EntityAPI] attribute.</p>
-<p>Features:</p>
+<p><b>Atomic Plugin - Code Generator for Atomic Framework</b></p>
+<p>Generate entity API extension methods for the <a href="https://github.com/StarKRE22/Atomic">Atomic Framework</a> - a reactive procedural game framework for C# and Unity.</p>
+
+<h3>About Atomic Framework:</h3>
+<p>Atomic is a game development framework that uses Entity-State-Behaviour pattern to reduce complexity in game interactions. It separates data from logic and uses reactive properties for real-time state management.</p>
+
+<h3>Key Features:</h3>
 <ul>
-  <li>Context action to generate Entity API extension methods</li>
-  <li>Automatic detection of [EntityAPI] attributes</li>
-  <li>Support for tag enums and properties</li>
-  <li>Configurable code generation options</li>
+  <li>🚀 <b>Framework Integration</b>: Seamless integration with Atomic Framework entities</li>
+  <li>📝 <b>Atomic Files</b>: Custom DSL for defining entity APIs with full IDE support</li>
+  <li>⚡ <b>Auto-Generation</b>: Automatic code generation on file changes</li>
+  <li>🎯 <b>Smart Completion</b>: Type and namespace auto-completion with IntelliSense</li>
+  <li>🔍 <b>Find Usages</b>: Track generated method usage across your project</li>
+  <li>♻️ <b>Refactoring</b>: Rename support with automatic updates</li>
+  <li>✅ <b>Validation</b>: Real-time error detection and quick fixes</li>
+  <li>🎨 <b>Syntax Highlighting</b>: Full language support for .atomic files</li>
 </ul>
-<p>Usage: Place cursor on an interface with [EntityAPI] attribute and press Alt+Enter to see the "Generate Entity API" action.</p>
-<p>Also supports .atomic configuration files for defining Entity API generation.</p>
+
+<h3>Usage:</h3>
+<p>Create a new .atomic file (File → New → Atomic File) and press Ctrl+Shift+G to generate extension methods for your Atomic Framework entities.</p>
+
+<h3>Generated Methods:</h3>
+<p>Tags: HasTag, AddTag, DelTag | Values: Get, Set, Add, Has, Del, TryGet, Ref</p>
+
+<h3>Learn More:</h3>
+<p>Visit <a href="https://github.com/StarKRE22/Atomic">Atomic Framework Repository</a> for framework documentation.</p>
 ]]>
   </description>
 
@@ -179,5 +194,23 @@
       <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
     </action>
   </actions>
+
+  <change-notes>
+<![CDATA[
+<h3>Version 0.1.0 - Initial Release</h3>
+<ul>
+  <li>🎉 Initial release of Atomic plugin for JetBrains Rider</li>
+  <li>🎮 Full support for <a href="https://github.com/StarKRE22/Atomic">Atomic Framework</a> entity API generation</li>
+  <li>✨ Complete language support for .atomic configuration files</li>
+  <li>🔧 C# extension method generation for Atomic Framework entities</li>
+  <li>💡 Smart code completion for types and namespaces</li>
+  <li>🔍 Find usages for generated extension methods</li>
+  <li>♻️ Rename refactoring with automatic updates</li>
+  <li>⚡ Automatic regeneration on file changes</li>
+  <li>✅ Real-time validation with quick fixes</li>
+  <li>🎨 Syntax highlighting and code folding</li>
+</ul>
+]]>
+  </change-notes>
 
 </idea-plugin>
