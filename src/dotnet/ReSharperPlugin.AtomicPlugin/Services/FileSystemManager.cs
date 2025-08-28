@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.DocumentManagers.Transactions;
@@ -42,7 +43,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             
             var tcs = new TaskCompletionSource<bool>();
             
-            solution.Locks.ExecuteOrQueue(Lifetime.Eternal, "Generate Entity API without undo", () =>
+            solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
             {
                 try
                 {

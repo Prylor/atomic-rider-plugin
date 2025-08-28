@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
@@ -23,7 +24,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
         {
             var tcs = new TaskCompletionSource<bool>();
             
-            _solution.Locks.Queue(Lifetime.Eternal, transactionName, () =>
+            _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
             {
                 try
                 {

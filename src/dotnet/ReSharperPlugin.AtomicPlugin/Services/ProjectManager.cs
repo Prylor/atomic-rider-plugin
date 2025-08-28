@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
@@ -397,7 +398,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
                 var shellLocks = _solution.GetComponent<IShellLocks>();
                 var result = false;
 
-                shellLocks.ExecuteOrQueueEx(_solution.GetSolutionLifetimes().UntilSolutionCloseLifetime, "AddFileToProject", () =>
+                shellLocks.Tasks.StartNew(_solution.GetSolutionLifetimes().UntilSolutionCloseLifetime, Scheduling.MainGuard, () =>
                 {
                     using (WriteLockCookie.Create())
                     {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.DocumentModel;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
@@ -37,7 +38,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             {
                 var tcs = new TaskCompletionSource<List<MethodUsageLocation>>();
                 
-                _solution.Locks.ExecuteOrQueueReadLockEx(Lifetime.Eternal, "FindMethodUsages", () =>
+                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     try
                     {
@@ -162,7 +163,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             {
                 var tcs = new TaskCompletionSource<List<MethodUsageLocation>>();
                 
-                _solution.Locks.ExecuteOrQueueReadLockEx(Lifetime.Eternal, "FindTagUsages", () =>
+                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     try
                     {
