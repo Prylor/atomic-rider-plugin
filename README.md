@@ -172,7 +172,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - JetBrains for the excellent Rider IDE and plugin SDK
-- The ECS community for inspiration and feedback
+- The Atomic community for inspiration and feedback
 
 ## 📞 Support
 
