@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
   <id>com.sarchuk.atomic</id>
   <name>Atomic</name>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <vendor>Iaroslav Sarchuk</vendor>
   <idea-version since-build="241.14494" until-build="251.*" />
   <depends>com.intellij.modules.rider</depends>
@@ -197,6 +197,15 @@
 
   <change-notes>
 <![CDATA[
+<h3>Version 0.1.1 - Bug Fixes</h3>
+<ul>
+  <li>Fixed EDT (Event Dispatch Thread) violations in all action classes</li>
+  <li>Added proper ActionUpdateThread declarations for thread safety</li>
+  <li>Fixed lifetime management in AtomicGenerationService</li>
+  <li>Fixed solution lifetime usage in ProjectManager</li>
+  <li>Added plugin verification for multiple Rider versions (2025.1.6, 2025.2.0.1)</li>
+</ul>
+
 <h3>Version 0.1.0 - Initial Release</h3>
 <ul>
   <li>🎉 Initial release of Atomic plugin for JetBrains Rider</li>
