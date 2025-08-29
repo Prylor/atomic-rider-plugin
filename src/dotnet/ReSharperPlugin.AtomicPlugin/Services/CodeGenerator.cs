@@ -6,6 +6,11 @@ namespace ReSharperPlugin.AtomicPlugin.Services
 {
     public class CodeGenerator : ICodeGenerator
     {
+        private const string AGGRESSIVE_INLINING = "\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]";
+        private const string UNSAFE_SUFFIX = "Unsafe";
+        private const string REF_MODIFIER = "ref";
+        private const string PARAM_NAME = "entity";
+
         private readonly IHashCodeGenerator _hashCodeGenerator;
 
         public CodeGenerator(IHashCodeGenerator hashCodeGenerator)
@@ -37,18 +42,31 @@ namespace ReSharperPlugin.AtomicPlugin.Services
 
         private void GenerateUsingStatements(StringBuilder sb, AtomicEntityApiConfig config)
         {
-
+            // Core Atomic Framework usings - ALWAYS included
+            sb.AppendLine("using Atomic.Entities;");
+            sb.AppendLine("using static Atomic.Entities.EntityNames;");
+            
             if (config.AggressiveInlining)
             {
                 sb.AppendLine("using System.Runtime.CompilerServices;");
             }
 
-            var existingUsings = new HashSet<string>();
-            if (config.AggressiveInlining) 
-                existingUsings.Add("System.Runtime.CompilerServices");
+            // Unity Editor using
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("using UnityEditor;");
+            sb.AppendLine("#endif");
+
+            var existingUsings = new HashSet<string> 
+            { 
+                "Atomic.Entities",
+                "Atomic.Entities.EntityNames",
+                "System.Runtime.CompilerServices",
+                "UnityEditor"
+            };
 
             foreach (var import in config.Imports)
             {
+                // Skip Atomic.Entities if it's explicitly in imports since we always add it
                 if (!existingUsings.Contains(import))
                 {
                     sb.AppendLine($"using {import};");
@@ -59,35 +77,71 @@ namespace ReSharperPlugin.AtomicPlugin.Services
 
         private void GenerateStaticClass(StringBuilder sb, AtomicEntityApiConfig config)
         {
+            // Add Unity Editor attribute
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("\t[InitializeOnLoad]");
+            sb.AppendLine("#endif");
+            
             sb.AppendLine($"\tpublic static class {config.ClassName}");
             sb.AppendLine("\t{");
 
             bool hasTags = config.Tags.Any();
-            bool hasProperties = config.Values.Any();
+            bool hasValues = config.Values.Any();
 
+            // Generate tag fields
             if (hasTags)
             {
+                sb.AppendLine();
                 sb.AppendLine("\t\t///Tags");
                 foreach (var tag in config.Tags)
                 {
-                    GenerateTag(sb, tag);
+                    sb.AppendLine($"\t\tpublic static readonly int {tag};");
                 }
             }
 
-            if (hasProperties)
+            // Generate value fields
+            if (hasValues)
             {
-                if (hasTags)
-                {
-                    sb.AppendLine();
-                    sb.AppendLine();
-                }
+                if (hasTags) sb.AppendLine();
+                
                 sb.AppendLine("\t\t///Values");
                 foreach (var value in config.Values)
                 {
-                    GenerateValue(sb, value.Name, value.Type);
+                    string typeComment = IsBaseType(value.Type) ? string.Empty : $"// {value.Type}";
+                    sb.AppendLine($"\t\tpublic static readonly int {value.Name}; {typeComment}");
                 }
             }
 
+            // Generate static constructor
+            sb.AppendLine();
+            sb.AppendLine($"\t\tstatic {config.ClassName}()");
+            sb.AppendLine("\t\t{");
+            
+            // Initialize tags in static constructor
+            if (hasTags)
+            {
+                sb.AppendLine("\t\t\t//Tags");
+                foreach (var tag in config.Tags)
+                {
+                    sb.AppendLine($"\t\t\t{tag} = NameToId(nameof({tag}));");
+                }
+            }
+            
+            // Initialize values in static constructor
+            if (hasValues)
+            {
+                if (hasTags) sb.AppendLine();
+                
+                sb.AppendLine("\t\t\t//Values");
+                foreach (var value in config.Values)
+                {
+                    sb.AppendLine($"\t\t\t{value.Name} = NameToId(nameof({value.Name}));");
+                }
+            }
+            
+            sb.AppendLine("\t\t}");
+
+            // Generate tag extensions
             if (hasTags)
             {
                 sb.AppendLine();
@@ -99,7 +153,8 @@ namespace ReSharperPlugin.AtomicPlugin.Services
                 }
             }
 
-            if (hasProperties)
+            // Generate value extensions
+            if (hasValues)
             {
                 sb.AppendLine();
                 sb.AppendLine();
@@ -114,37 +169,29 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             sb.AppendLine("    }");
         }
 
-        private void GenerateValue(StringBuilder sb, string key, string type)
-        {
-            int id = _hashCodeGenerator.GetHashCode(key);
-            string typeComment = IsBaseType(type) ? "" : $" // {type}";
-            sb.AppendLine($"\t\tpublic const int {key} = {id};{typeComment}");
-        }
-
-        private void GenerateTag(StringBuilder sb, string tag)
-        {
-            int id = _hashCodeGenerator.GetHashCode(tag);
-            sb.AppendLine($"\t\tpublic const int {tag} = {id};");
-        }
-
         private void GenerateTagExtensions(StringBuilder sb, string tag, string entity, bool useInlining)
         {
-            const string aggressiveInlining = "\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]";
+            sb.AppendLine();
+            
+            sb.AppendLine($"\t\t#region {tag}");
             sb.AppendLine();
 
             //Has:
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static bool Has{tag}Tag(this {entity} obj) => obj.HasTag({tag});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static bool Has{tag}Tag(this {entity} {PARAM_NAME}) => {PARAM_NAME}.HasTag({tag});");
 
             //Add:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static bool Add{tag}Tag(this {entity} obj) => obj.AddTag({tag});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static bool Add{tag}Tag(this {entity} {PARAM_NAME}) => {PARAM_NAME}.AddTag({tag});");
 
             //Del:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static bool Del{tag}Tag(this {entity} obj) => obj.DelTag({tag});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static bool Del{tag}Tag(this {entity} {PARAM_NAME}) => {PARAM_NAME}.DelTag({tag});");
+            
+            sb.AppendLine();
+            sb.AppendLine("\t\t#endregion");
         }
 
         private void GenerateValueExtensions(
@@ -156,58 +203,60 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             bool unsafeAccess
         )
         {
-            const string aggressiveInlining = "\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]";
-            const string unsafeSuffix = "Unsafe";
-            const string refModifier = "ref";
+            sb.AppendLine();
             
+            sb.AppendLine($"\t\t#region {name}");
             sb.AppendLine();
 
-            string unsafeSuffixStr = unsafeAccess ? unsafeSuffix : string.Empty;
-            string refModifierStr = unsafeAccess ? refModifier : string.Empty;
+            string unsafeSuffix = unsafeAccess ? UNSAFE_SUFFIX : string.Empty;
+            string refModifier = unsafeAccess ? REF_MODIFIER : string.Empty;
 
             //Get:
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static {typeName} Get{name}(this {entity} obj) => " +
-                          $"obj.GetValue{unsafeSuffixStr}<{typeName}>({name});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static {typeName} Get{name}(this {entity} {PARAM_NAME}) => " +
+                          $"{PARAM_NAME}.GetValue{unsafeSuffix}<{typeName}>({name});");
             
             //Get Ref:
             if (unsafeAccess)
             {
                 sb.AppendLine();
-                sb.AppendLine($"\t\tpublic static {refModifierStr} {typeName} Ref{name}(this {entity} obj) => " +
-                              $"{refModifierStr} obj.GetValue{unsafeSuffixStr}<{typeName}>({name});");
+                sb.AppendLine($"\t\tpublic static {refModifier} {typeName} Ref{name}(this {entity} {PARAM_NAME}) => " +
+                              $"{refModifier} {PARAM_NAME}.GetValue{unsafeSuffix}<{typeName}>({name});");
             }
             
             //TryGet:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
             sb.AppendLine(
-                $"\t\tpublic static bool TryGet{name}(this {entity} obj, out {typeName} value) =>" +
-                $" obj.TryGetValue{unsafeSuffixStr}({name}, out value);");
+                $"\t\tpublic static bool TryGet{name}(this {entity} {PARAM_NAME}, out {typeName} value) =>" +
+                $" {PARAM_NAME}.TryGetValue{unsafeSuffix}({name}, out value);");
 
             //Add:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static void Add{name}(this {entity} obj, {typeName} value) => " +
-                          $"obj.AddValue({name}, value);");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static void Add{name}(this {entity} {PARAM_NAME}, {typeName} value) => " +
+                          $"{PARAM_NAME}.AddValue({name}, value);");
 
             //Has:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static bool Has{name}(this {entity} obj) => " +
-                          $"obj.HasValue({name});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static bool Has{name}(this {entity} {PARAM_NAME}) => " +
+                          $"{PARAM_NAME}.HasValue({name});");
 
             //Del:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static bool Del{name}(this {entity} obj) => " +
-                          $"obj.DelValue({name});");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static bool Del{name}(this {entity} {PARAM_NAME}) => " +
+                          $"{PARAM_NAME}.DelValue({name});");
 
             //Set:
             sb.AppendLine();
-            if (useInlining) sb.AppendLine(aggressiveInlining);
-            sb.AppendLine($"\t\tpublic static void Set{name}(this {entity} obj, {typeName} value) => " +
-                          $"obj.SetValue({name}, value);");
+            if (useInlining) sb.AppendLine(AGGRESSIVE_INLINING);
+            sb.AppendLine($"\t\tpublic static void Set{name}(this {entity} {PARAM_NAME}, {typeName} value) => " +
+                          $"{PARAM_NAME}.SetValue({name}, value);");
+            
+            sb.AppendLine();
+            sb.AppendLine("\t\t#endregion");
         }
 
         private bool IsBaseType(string type)
