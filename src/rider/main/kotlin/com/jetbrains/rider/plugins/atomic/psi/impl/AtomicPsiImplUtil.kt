@@ -5,15 +5,6 @@ import com.jetbrains.rider.plugins.atomic.psi.*
 
 object AtomicPsiImplUtil {
     @JvmStatic
-    fun getKey(element: AtomicHeaderProp): String = "header"
-    
-    @JvmStatic
-    fun getValue(element: AtomicHeaderProp): String? {
-        val string = element.node.findChildByType(AtomicTypes.STRING)
-        return string?.text?.trim('"')
-    }
-    
-    @JvmStatic
     fun getKey(element: AtomicEntityTypeProp): String = "entityType"
     
     @JvmStatic

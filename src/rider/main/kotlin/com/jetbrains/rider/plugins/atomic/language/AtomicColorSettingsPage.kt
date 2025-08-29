@@ -15,7 +15,6 @@ class AtomicColorSettingsPage : ColorSettingsPage {
     
     override fun getDemoText(): String = """
         # This is a comment
-        header: EntityAPI
         entityType: IEntity
         aggressiveInlining: true
         

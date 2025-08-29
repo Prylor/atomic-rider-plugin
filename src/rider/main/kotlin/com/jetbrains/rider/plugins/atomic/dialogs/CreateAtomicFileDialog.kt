@@ -41,7 +41,6 @@ class CreateAtomicFileDialog(
     private val namespaceField = createNamespaceField()
     private val entityTypeField = createEntityTypeField()
     private val directoryField = TextFieldWithBrowseButton()
-    private val headerField = JBTextField()
     private val aggressiveInliningCheckBox = JBCheckBox("Aggressive Inlining", true)
     private val unsafeCheckBox = JBCheckBox("Unsafe Access", false)
     
@@ -51,7 +50,6 @@ class CreateAtomicFileDialog(
         val namespace: String?,
         val entityType: String?,
         val directory: String?,
-        val header: String?,
         val aggressiveInlining: Boolean,
         val unsafe: Boolean
     )
@@ -132,12 +130,6 @@ class CreateAtomicFileDialog(
             separator()
             
             group("Header Properties") {
-                row("Header:") {
-                    cell(headerField)
-                        .columns(COLUMNS_LARGE)
-                        .comment("Custom header text for generated file (optional)")
-                }
-
                 row("Class name:") {
                     cell(classNameField)
                         .columns(COLUMNS_LARGE)
@@ -222,7 +214,6 @@ class CreateAtomicFileDialog(
     
     fun getResult(): Result {
         return Result(
-            header = headerField.text.takeIf { it.isNotBlank() },
             fileName = fileNameField.text,
             className = classNameField.text,
             namespace = namespaceField.text.takeIf { it.isNotBlank() },

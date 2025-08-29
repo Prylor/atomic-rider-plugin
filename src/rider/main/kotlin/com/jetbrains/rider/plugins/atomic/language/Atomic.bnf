@@ -21,12 +21,7 @@ private file_content ::= (header_section | section | COMMENT | CRLF)*
 
 header_section ::= header_property+
 
-private header_property ::= (header_prop | entity_type_prop | aggressive_inlining_prop | unsafe_prop | namespace_prop | class_name_prop | directory_prop | solution_prop)
-
-header_prop ::= HEADER_KEYWORD COLON (STRING | IDENTIFIER) {
-  pin=1
-  methods=[getKey getValue]
-}
+private header_property ::= (entity_type_prop | aggressive_inlining_prop | unsafe_prop | namespace_prop | class_name_prop | directory_prop | solution_prop)
 
 entity_type_prop ::= ENTITY_TYPE_KEYWORD COLON IDENTIFIER {
   pin=1

@@ -12,7 +12,6 @@ public interface AtomicTypes {
   IElementType CLASS_NAME_PROP = new AtomicElementType("CLASS_NAME_PROP");
   IElementType DIRECTORY_PROP = new AtomicElementType("DIRECTORY_PROP");
   IElementType ENTITY_TYPE_PROP = new AtomicElementType("ENTITY_TYPE_PROP");
-  IElementType HEADER_PROP = new AtomicElementType("HEADER_PROP");
   IElementType HEADER_SECTION = new AtomicElementType("HEADER_SECTION");
   IElementType IMPORTS_SECTION = new AtomicElementType("IMPORTS_SECTION");
   IElementType IMPORT_ITEM = new AtomicElementType("IMPORT_ITEM");
@@ -32,7 +31,6 @@ public interface AtomicTypes {
   IElementType DIRECTORY_KEYWORD = new AtomicTokenType("DIRECTORY_KEYWORD");
   IElementType ENTITY_TYPE_KEYWORD = new AtomicTokenType("ENTITY_TYPE_KEYWORD");
   IElementType FALSE = new AtomicTokenType("FALSE");
-  IElementType HEADER_KEYWORD = new AtomicTokenType("HEADER_KEYWORD");
   IElementType HYPHEN = new AtomicTokenType("HYPHEN");
   IElementType IDENTIFIER = new AtomicTokenType("IDENTIFIER");
   IElementType IMPORTS_KEYWORD = new AtomicTokenType("IMPORTS_KEYWORD");
@@ -63,9 +61,6 @@ public interface AtomicTypes {
       }
       else if (type == ENTITY_TYPE_PROP) {
         return new AtomicEntityTypePropImpl(node);
-      }
-      else if (type == HEADER_PROP) {
-        return new AtomicHeaderPropImpl(node);
       }
       else if (type == HEADER_SECTION) {
         return new AtomicHeaderSectionImpl(node);

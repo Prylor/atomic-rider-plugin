@@ -138,35 +138,11 @@ public class AtomicParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // HEADER_KEYWORD COLON (STRING | IDENTIFIER)
-  public static boolean header_prop(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "header_prop")) return false;
-    if (!nextTokenIs(builder_, HEADER_KEYWORD)) return false;
-    boolean result_, pinned_;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, HEADER_PROP, null);
-    result_ = consumeTokens(builder_, 1, HEADER_KEYWORD, COLON);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && header_prop_2(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, result_, pinned_, null);
-    return result_ || pinned_;
-  }
-
-  // STRING | IDENTIFIER
-  private static boolean header_prop_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "header_prop_2")) return false;
-    boolean result_;
-    result_ = consumeToken(builder_, STRING);
-    if (!result_) result_ = consumeToken(builder_, IDENTIFIER);
-    return result_;
-  }
-
-  /* ********************************************************** */
-  // header_prop | entity_type_prop | aggressive_inlining_prop | unsafe_prop | namespace_prop | class_name_prop | directory_prop | solution_prop
+  // entity_type_prop | aggressive_inlining_prop | unsafe_prop | namespace_prop | class_name_prop | directory_prop | solution_prop
   static boolean header_property(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "header_property")) return false;
     boolean result_;
-    result_ = header_prop(builder_, level_ + 1);
-    if (!result_) result_ = entity_type_prop(builder_, level_ + 1);
+    result_ = entity_type_prop(builder_, level_ + 1);
     if (!result_) result_ = aggressive_inlining_prop(builder_, level_ + 1);
     if (!result_) result_ = unsafe_prop(builder_, level_ + 1);
     if (!result_) result_ = namespace_prop(builder_, level_ + 1);

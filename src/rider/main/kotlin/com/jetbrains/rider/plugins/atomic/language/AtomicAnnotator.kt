@@ -35,7 +35,6 @@ class AtomicAnnotator : Annotator {
         }
         
         when (element) {
-            is AtomicHeaderProp -> annotateHeaderProp(element, holder)
             is AtomicEntityTypeProp -> annotateEntityTypeProp(element, holder)
             is AtomicAggressiveInliningProp -> annotateAggressiveInliningProp(element, holder)
             is AtomicNamespaceProp -> annotateNamespaceProp(element, holder)
@@ -56,7 +55,6 @@ class AtomicAnnotator : Annotator {
         file.children.filterIsInstance<AtomicHeaderSection>().forEach { headerSection ->
             headerSection.children.forEach { child ->
                 when (child) {
-                    is AtomicHeaderProp -> existingFields.add("header")
                     is AtomicEntityTypeProp -> existingFields.add("entityType")
                 }
             }
@@ -135,14 +133,6 @@ class AtomicAnnotator : Annotator {
                         .create()
                 }
             }
-        }
-    }
-    
-    private fun annotateHeaderProp(property: AtomicHeaderProp, holder: AnnotationHolder) {
-        if (!hasValueAfterColon(property)) {
-            holder.newAnnotation(HighlightSeverity.ERROR, "Property 'header' requires a value")
-                .range(property.textRange)
-                .create()
         }
     }
     

@@ -20,7 +20,6 @@ WHITE_SPACE=[\ \n\t\f]
 END_OF_LINE_COMMENT="#"[^\r\n]*
 
 // Keywords
-HEADER="header"
 ENTITY_TYPE="entityType"
 AGGRESSIVE_INLINING="aggressiveInlining"
 UNSAFE="unsafe"
@@ -59,7 +58,6 @@ HYPHEN="-"
 
 <YYINITIAL> {END_OF_LINE_COMMENT}                           { yybegin(YYINITIAL); return AtomicTypes.COMMENT; }
 
-<YYINITIAL> {HEADER}                                        { yybegin(WAITING_VALUE); return AtomicTypes.HEADER_KEYWORD; }
 <YYINITIAL> {ENTITY_TYPE}                                   { yybegin(WAITING_VALUE); return AtomicTypes.ENTITY_TYPE_KEYWORD; }
 <YYINITIAL> {AGGRESSIVE_INLINING}                           { yybegin(WAITING_VALUE); return AtomicTypes.AGGRESSIVE_INLINING_KEYWORD; }
 <YYINITIAL> {UNSAFE}                                        { yybegin(WAITING_VALUE); return AtomicTypes.UNSAFE_KEYWORD; }
@@ -94,7 +92,6 @@ HYPHEN="-"
 <IN_IMPORTS> {IMPORTS}                                      { yybegin(IN_IMPORTS); return AtomicTypes.IMPORTS_KEYWORD; }
 <IN_IMPORTS> {TAGS}                                         { yybegin(IN_TAGS); return AtomicTypes.TAGS_KEYWORD; }
 <IN_IMPORTS> {VALUES}                                       { yybegin(IN_VALUES); return AtomicTypes.VALUES_KEYWORD; }
-<IN_IMPORTS> {HEADER}                                       { yybegin(WAITING_VALUE); return AtomicTypes.HEADER_KEYWORD; }
 <IN_IMPORTS> {ENTITY_TYPE}                                  { yybegin(WAITING_VALUE); return AtomicTypes.ENTITY_TYPE_KEYWORD; }
 <IN_IMPORTS> {AGGRESSIVE_INLINING}                          { yybegin(WAITING_VALUE); return AtomicTypes.AGGRESSIVE_INLINING_KEYWORD; }
 <IN_IMPORTS> {UNSAFE}                                       { yybegin(WAITING_VALUE); return AtomicTypes.UNSAFE_KEYWORD; }
@@ -107,7 +104,6 @@ HYPHEN="-"
 <IN_TAGS> {IMPORTS}                                         { yybegin(IN_IMPORTS); return AtomicTypes.IMPORTS_KEYWORD; }
 <IN_TAGS> {TAGS}                                            { yybegin(IN_TAGS); return AtomicTypes.TAGS_KEYWORD; }
 <IN_TAGS> {VALUES}                                          { yybegin(IN_VALUES); return AtomicTypes.VALUES_KEYWORD; }
-<IN_TAGS> {HEADER}                                          { yybegin(WAITING_VALUE); return AtomicTypes.HEADER_KEYWORD; }
 <IN_TAGS> {ENTITY_TYPE}                                     { yybegin(WAITING_VALUE); return AtomicTypes.ENTITY_TYPE_KEYWORD; }
 <IN_TAGS> {AGGRESSIVE_INLINING}                             { yybegin(WAITING_VALUE); return AtomicTypes.AGGRESSIVE_INLINING_KEYWORD; }
 <IN_TAGS> {UNSAFE}                                          { yybegin(WAITING_VALUE); return AtomicTypes.UNSAFE_KEYWORD; }
@@ -132,7 +128,6 @@ HYPHEN="-"
 <IN_VALUE_TYPE> {IMPORTS}                                   { yypushback(yylength()); yybegin(IN_VALUES); }
 <IN_VALUE_TYPE> {TAGS}                                      { yypushback(yylength()); yybegin(IN_VALUES); }
 <IN_VALUE_TYPE> {VALUES}                                    { yypushback(yylength()); yybegin(IN_VALUES); }
-<IN_VALUE_TYPE> {HEADER}                                    { yypushback(yylength()); yybegin(IN_VALUES); }
 <IN_VALUE_TYPE> {ENTITY_TYPE}                               { yypushback(yylength()); yybegin(IN_VALUES); }
 <IN_VALUE_TYPE> {ANGLE_OPEN}                                { return AtomicTypes.TYPE_REFERENCE; }
 <IN_VALUE_TYPE> {ANGLE_CLOSE}                               { return AtomicTypes.TYPE_REFERENCE; }

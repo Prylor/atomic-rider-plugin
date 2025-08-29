@@ -98,7 +98,7 @@ class AtomicCompletionContributor : CompletionContributor() {
                         return@Runnable
                     }
                     
-                    val headerPattern = Regex("^(header:|entityType:|aggressiveInlining:|unsafe:|namespace:|className:|directory:|solution:).*$", RegexOption.MULTILINE)
+                    val headerPattern = Regex("^(entityType:|aggressiveInlining:|unsafe:|namespace:|className:|directory:|solution:).*$", RegexOption.MULTILINE)
                     val headerMatches = headerPattern.findAll(text).toList()
                     
                     if (headerMatches.isNotEmpty()) {
@@ -343,9 +343,6 @@ class AtomicCompletionContributor : CompletionContributor() {
                 
                 
                 val allKeywords = mapOf(
-                    
-                    "header" to "Header/title for the atomic file",
-                    
                     
                     "entityType" to "The C# type to extend",
                     "aggressiveInlining" to "Enable aggressive inlining",

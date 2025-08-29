@@ -20,9 +20,6 @@ public interface AtomicHeaderSection extends PsiElement {
   List<AtomicEntityTypeProp> getEntityTypePropList();
 
   @NotNull
-  List<AtomicHeaderProp> getHeaderPropList();
-
-  @NotNull
   List<AtomicNamespaceProp> getNamespacePropList();
 
   @NotNull

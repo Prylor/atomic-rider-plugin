@@ -306,14 +306,13 @@ data class RequiredField(
     val description: String
 ) {
     companion object {
-        val HEADER = RequiredField("header", FieldSection.HEADER, "Header/title for the generated code")
         val ENTITY_TYPE = RequiredField("entityType", FieldSection.HEADER, "The entity interface type to extend")
         val NAMESPACE = RequiredField("namespace", FieldSection.PROPERTY, "Target namespace for generated code")
         val CLASS_NAME = RequiredField("className", FieldSection.PROPERTY, "Name of the generated class")
         val DIRECTORY = RequiredField("directory", FieldSection.PROPERTY, "Output directory path")
         val SOLUTION = RequiredField("solution", FieldSection.PROPERTY, "Target C# project/solution")
         
-        val ALL_REQUIRED = listOf(HEADER, ENTITY_TYPE, NAMESPACE, CLASS_NAME, DIRECTORY)
+        val ALL_REQUIRED = listOf(ENTITY_TYPE, NAMESPACE, CLASS_NAME, DIRECTORY)
     }
 }
 

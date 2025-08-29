@@ -59,7 +59,6 @@ class AtomicSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> {
         return when (tokenType) {
             // Keywords
-            AtomicTypes.HEADER_KEYWORD,
             AtomicTypes.ENTITY_TYPE_KEYWORD,
             AtomicTypes.AGGRESSIVE_INLINING_KEYWORD,
             AtomicTypes.UNSAFE_KEYWORD,

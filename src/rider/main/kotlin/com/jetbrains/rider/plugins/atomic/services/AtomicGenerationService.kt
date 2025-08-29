@@ -450,13 +450,6 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                 logger.info("Header child: ${child.javaClass.simpleName} - ${child.text}")
             }
             
-            headerSection.headerPropList.forEach { prop ->
-                val key = prop.firstChild?.text ?: return@forEach
-                val value = prop.lastChild?.text?.trim('"') ?: return@forEach
-                logger.info("Header property from headerPropList: key='$key', value='$value'")
-                headerProperties.add(HeaderProperty(key, value))
-            }
-            
             
             headerSection.entityTypePropList.firstOrNull()?.let { prop ->
                 val value = AtomicPsiImplUtil.getValue(prop)
@@ -534,12 +527,6 @@ class AtomicGenerationService(project: Project) : LifetimedProjectComponent(proj
                     if (!headerProperties.any { it.key == "entityType" }) {
                         val value = AtomicPsiImplUtil.getValue(child)
                         if (value != null) headerProperties.add(HeaderProperty("entityType", value))
-                    }
-                }
-                is AtomicHeaderProp -> {
-                    if (!headerProperties.any { it.key == "header" }) {
-                        val value = AtomicPsiImplUtil.getValue(child)
-                        if (value != null) headerProperties.add(HeaderProperty("header", value))
                     }
                 }
             }

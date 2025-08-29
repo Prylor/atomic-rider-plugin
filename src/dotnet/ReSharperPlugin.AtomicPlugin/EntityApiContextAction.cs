@@ -100,9 +100,6 @@ namespace ReSharperPlugin.AtomicPlugin
 
                     switch (propertyName)
                     {
-                        case "Header":
-                            config.Header = GetStringValue(arg.Source);
-                            break;
                         case "Namespace":
                             config.Namespace = GetStringValue(arg.Source) ?? config.Namespace;
                             break;

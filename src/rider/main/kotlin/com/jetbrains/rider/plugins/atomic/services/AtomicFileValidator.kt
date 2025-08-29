@@ -77,10 +77,6 @@ class AtomicFileValidator(private val project: Project) {
         atomicFile.children.filterIsInstance<com.jetbrains.rider.plugins.atomic.psi.AtomicHeaderSection>().forEach { headerSection ->
             headerSection.children.forEach { child ->
                 when (child) {
-                    is com.jetbrains.rider.plugins.atomic.psi.AtomicHeaderProp -> {
-                        existingFields.add("header")
-                        if (!hasValue(child)) missingFields.add("header")
-                    }
                     is com.jetbrains.rider.plugins.atomic.psi.AtomicEntityTypeProp -> {
                         existingFields.add("entityType")
                         if (!hasValue(child)) missingFields.add("entityType")
@@ -114,7 +110,7 @@ class AtomicFileValidator(private val project: Project) {
         }
         checkElement(atomicFile)
         
-        val requiredFields = listOf("header", "entityType", "namespace", "className", "directory")
+        val requiredFields = listOf("entityType", "namespace", "className", "directory")
         requiredFields.forEach { field ->
             if (!existingFields.contains(field)) {
                 missingFields.add(field)

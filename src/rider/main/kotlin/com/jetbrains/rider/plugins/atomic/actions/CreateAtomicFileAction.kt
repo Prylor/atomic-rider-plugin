@@ -46,10 +46,6 @@ class CreateAtomicFileAction : CreateElementActionBase(
         
         
         val content = buildString {
-            if (!result.header.isNullOrBlank()) {
-                appendLine("header: \"${result.header}\"")
-            }
-            
             if (!result.namespace.isNullOrBlank()) {
                 appendLine("namespace: ${result.namespace}")
             }

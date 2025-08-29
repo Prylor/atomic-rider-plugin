@@ -53,7 +53,6 @@ This plugin generates extension methods that seamlessly integrate with Atomic Fr
 3. Configure your entity API:
 
 ```atomic
-header: "Generated Entity API"
 entityType: "Entity"
 namespace: "MyGame.Components"
 className: "EntityExtensions"

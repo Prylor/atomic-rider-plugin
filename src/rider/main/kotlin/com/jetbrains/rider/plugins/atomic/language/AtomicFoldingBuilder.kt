@@ -25,10 +25,9 @@ class AtomicFoldingBuilder : FoldingBuilderEx(), DumbAware {
                                it.classNamePropList.size +
                                it.directoryPropList.size +
                                it.entityTypePropList.size +
-                               it.headerPropList.size +
                                it.namespacePropList.size
             if (propertyCount > 1) {
-                addFoldingDescriptor(descriptors, it, "header: ...")
+                addFoldingDescriptor(descriptors, it, "properties...")
             }
         }
         
@@ -61,7 +60,7 @@ class AtomicFoldingBuilder : FoldingBuilderEx(), DumbAware {
     
     override fun getPlaceholderText(node: ASTNode): String? {
         return when (val psi = node.psi) {
-            is AtomicHeaderSection -> "header: ..."
+            is AtomicHeaderSection -> "properties..."
             is AtomicImportsSection -> "imports: ${psi.importItemList.size} items"
             is AtomicTagsSection -> "tags: ${psi.tagItemList.size} items"
             is AtomicValuesSection -> "values: ${psi.valueItemList.size} items"

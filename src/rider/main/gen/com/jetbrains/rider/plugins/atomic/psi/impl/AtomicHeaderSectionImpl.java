@@ -53,12 +53,6 @@ public class AtomicHeaderSectionImpl extends ASTWrapperPsiElement implements Ato
 
   @Override
   @NotNull
-  public List<AtomicHeaderProp> getHeaderPropList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, AtomicHeaderProp.class);
-  }
-
-  @Override
-  @NotNull
   public List<AtomicNamespaceProp> getNamespacePropList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, AtomicNamespaceProp.class);
   }

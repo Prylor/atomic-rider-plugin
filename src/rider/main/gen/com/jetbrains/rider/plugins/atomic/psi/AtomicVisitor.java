@@ -24,10 +24,6 @@ public class AtomicVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitHeaderProp(@NotNull AtomicHeaderProp o) {
-    visitPsiElement(o);
-  }
-
   public void visitHeaderSection(@NotNull AtomicHeaderSection o) {
     visitPsiElement(o);
   }

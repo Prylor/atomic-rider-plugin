@@ -210,10 +210,6 @@ class AtomicAutoGenerator(private val project: Project) {
         atomicFile.children.filterIsInstance<AtomicHeaderSection>().forEach { headerSection ->
             headerSection.children.forEach { child ->
                 when (child) {
-                    is AtomicHeaderProp -> {
-                        existingFields.add("header")
-                        if (!hasValue(child)) missingFields.add("header")
-                    }
                     is AtomicEntityTypeProp -> {
                         existingFields.add("entityType")
                         if (!hasValue(child)) missingFields.add("entityType")
@@ -259,7 +255,7 @@ class AtomicAutoGenerator(private val project: Project) {
         }
         checkElement(atomicFile)
         
-        val requiredFields = listOf("header", "entityType", "namespace", "className", "directory")
+        val requiredFields = listOf("entityType", "namespace", "className", "directory")
         requiredFields.forEach { field ->
             if (!existingFields.contains(field)) {
                 missingFields.add(field)
@@ -311,7 +307,6 @@ class AtomicAutoGenerator(private val project: Project) {
             atomicFile.children.filterIsInstance<AtomicHeaderSection>().forEach { headerSection ->
                 headerSection.children.forEach { child ->
                     when (child) {
-                        is AtomicHeaderProp -> config.header = AtomicPsiImplUtil.getValue(child) ?: ""
                         is AtomicEntityTypeProp -> config.entityType = AtomicPsiImplUtil.getValue(child) ?: ""
                         is AtomicAggressiveInliningProp -> config.aggressiveInlining = AtomicPsiImplUtil.getBooleanValue(child)
                         is AtomicUnsafeProp -> config.unsafe = AtomicPsiImplUtil.getBooleanValue(child)
@@ -415,7 +410,6 @@ class AtomicAutoGenerator(private val project: Project) {
     )
     
     data class AtomicFileConfig(
-        var header: String = "",
         var entityType: String = "",
         var namespace: String = "",
         var className: String = "",
