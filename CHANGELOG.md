@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-08-30
+
+### Fixed
+- Fixed critical 30-second timeout when deleting .atomic files
+- Replaced deprecated threading APIs (ExecuteOrQueueEx, ExecuteOrQueueReadLockEx, ExecuteOrQueue)
+- Fixed RPC timeout issues during file deletion operations
+
+### Changed
+- Made file deletion completely asynchronous using coroutines
+- Updated threading API calls to use Tasks.StartNew with Scheduling.MainGuard
+- File deletion now uses Java File API first, falling back to VirtualFile API if needed
+
+### Removed
+- Removed DirectFileWriter.cs as it's no longer needed with improved async handling
+
+### Technical
+- Resolved synchronous VirtualFile.delete() blocking the EDT
+- Improved file deletion performance using two-step strategy
+- Enhanced compatibility with Rider 2025.2 threading model
+
 ## [0.1.2] - 2025-08-30
 
 ### Fixed
