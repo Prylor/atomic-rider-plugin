@@ -23,14 +23,30 @@ import com.intellij.openapi.vfs.VfsUtil
 
 class AtomicCompletionContributor : CompletionContributor() {
     
+    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        val file = parameters.originalFile
+        if (file.virtualFile?.extension != "atomic") {
+            return
+        }
+        super.fillCompletionVariants(parameters, result)
+    }
     
     companion object {
         fun addImportToAtomicFile(project: Project, document: Document, namespace: String) {
+            val virtualFile = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getFile(document)
+            if (virtualFile?.extension != "atomic") {
+                return
+            }
+            
             WriteCommandAction.runWriteCommandAction(project, "Add Import", null, Runnable {
                 
                 PsiDocumentManager.getInstance(project).commitDocument(document)
                 
                 val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) as? AtomicFile ?: return@Runnable
+                
+                if (!psiFile.isValid || psiFile.virtualFile?.extension != "atomic") {
+                    return@Runnable
+                }
                 var importsSection = psiFile.children.filterIsInstance<AtomicImportsSection>().firstOrNull()
                 
                 if (importsSection == null) {
@@ -267,6 +283,10 @@ class AtomicCompletionContributor : CompletionContributor() {
         ) {
             val element = parameters.position
             val file = element.containingFile as? AtomicFile ?: return
+            
+            if (!file.isValid || file.virtualFile?.extension != "atomic") {
+                return
+            }
             val prefix = result.prefixMatcher.prefix
             
             println("AtomicCompletion: Triggered with prefix='$prefix', element=${element.javaClass.simpleName}")
@@ -398,21 +418,17 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
-            println("CSharpTypeCompletionProvider: Triggered!")
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
             
+
             val element = parameters.position
             val project = parameters.position.project
             val service = AtomicGenerationService.getInstance(project)
-            
-            
             val isAutoTriggered = parameters.isAutoPopup
-            println("CSharpTypeCompletionProvider: isAutoTriggered=$isAutoTriggered")
-            
-            
             val prefix = result.prefixMatcher.prefix
-            println("CSharpTypeCompletionProvider: prefix='$prefix', element=${element.javaClass.simpleName}")
-            
-            
             val text = element.containingFile.text
             val offset = parameters.offset
             
@@ -423,8 +439,7 @@ class AtomicCompletionContributor : CompletionContributor() {
             }
             
             val lineText = if (lineStart < offset) text.substring(lineStart, offset) else ""
-            println("CSharpTypeCompletionProvider: lineText='$lineText'")
-            
+
             
             var inValuesSection = false
             var currentParent = element.parent
@@ -438,7 +453,6 @@ class AtomicCompletionContributor : CompletionContributor() {
             
             
             if (!inValuesSection) {
-                println("CSharpTypeCompletionProvider: Not in values section, skipping")
                 return
             }
             
@@ -459,41 +473,33 @@ class AtomicCompletionContributor : CompletionContributor() {
             }
             
             if (insideGeneric) {
-                println("CSharpTypeCompletionProvider: Inside angle brackets, skipping (let GenericTypeParameterCompletionProvider handle it)")
                 return
             }
             
             
             val beforeCursor = lineText.trimEnd()
             if (!beforeCursor.contains(":") || beforeCursor.endsWith(":")) {
-                println("CSharpTypeCompletionProvider: Not after colon with content, skipping")
                 return
             }
             
             
             val actualPrefix = getActualPrefix(parameters)
-            println("CSharpTypeCompletionProvider: actualPrefix='$actualPrefix'")
-            
+
             
             val fullText = getFullTypeText(parameters)
-            println("CSharpTypeCompletionProvider: Full type text='$fullText'")
-            
+
             val namespaceFilter = if (fullText.contains('.')) {
                 val lastDotIndex = fullText.lastIndexOf('.')
                 val caretPositionInType = parameters.offset - (parameters.position.textRange.startOffset - actualPrefix.length)
-                println("CSharpTypeCompletionProvider: lastDotIndex=$lastDotIndex, caretPositionInType=$caretPositionInType")
-                
+
                 if (caretPositionInType > lastDotIndex) {
                     
                     val ns = fullText.substring(0, lastDotIndex)
-                    println("CSharpTypeCompletionProvider: Detected namespace filter='$ns'")
                     ns
                 } else null
             } else null
             
-            println("CSharpTypeCompletionProvider: fullText='$fullText', namespaceFilter='$namespaceFilter'")
-            
-            
+
             val prefixToUse = if (namespaceFilter != null) {
                 
                 val afterDot = fullText.substringAfterLast('.')
@@ -513,10 +519,10 @@ class AtomicCompletionContributor : CompletionContributor() {
             }
             
             
-            val file = parameters.originalFile as? AtomicFile
-            val imports: List<String> = file?.let { atomicFile ->
+            val atomicFile = parameters.originalFile as? AtomicFile
+            val imports: List<String> = atomicFile?.let { af ->
                 
-                atomicFile.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
+                af.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
                     importsSection.importItemList.mapNotNull { importItem ->
                         importItem.node.findChildByType(AtomicTypes.IMPORT_PATH)?.text
                     }
@@ -526,27 +532,21 @@ class AtomicCompletionContributor : CompletionContributor() {
             
             val projectPath = project.basePath ?: ""
             
-            println("CSharpTypeCompletionProvider: Getting types from backend...")
-            println("CSharpTypeCompletionProvider: imports=${imports.joinToString(", ")}")
-            println("CSharpTypeCompletionProvider: projectPath=$projectPath")
-            
+
             
             try {
                 val backendTypes = runBlocking {
                     try {
                         service.getTypeCompletions(prefixToUse, imports, projectPath, namespaceFilter)
                     } catch (e: Exception) {
-                        println("CSharpTypeCompletionProvider: Backend error - ${e.message}")
                         e.printStackTrace()
                         emptyList()
                     }
                 }
                 
-                println("CSharpTypeCompletionProvider: Got ${backendTypes.size} types from backend")
-                
+
                 if (namespaceFilter != null) {
-                    println("CSharpTypeCompletionProvider: Showing first 5 types from namespace '$namespaceFilter':")
-                    backendTypes.take(5).forEach { 
+                    backendTypes.take(5).forEach {
                         println("  - ${it.typeName} (${it.namespace})")
                     }
                 }
@@ -644,7 +644,6 @@ class AtomicCompletionContributor : CompletionContributor() {
                 }
                 
             } catch (e: Exception) {
-                println("CSharpTypeCompletionProvider: Exception - ${e.message}")
                 e.printStackTrace()
             }
             
@@ -681,7 +680,6 @@ class AtomicCompletionContributor : CompletionContributor() {
                 ""
             }
             
-            println("CSharpTypeCompletionProvider: getActualPrefix - wordStart=$wordStart, actualOffset=$actualOffset, prefix='$prefix'")
             return prefix
         }
         
@@ -739,6 +737,11 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val element = parameters.position
             val text = element.containingFile.text
             val offset = parameters.offset
@@ -804,9 +807,9 @@ class AtomicCompletionContributor : CompletionContributor() {
             val resultWithCorrectPrefix = result.withPrefixMatcher(prefixToUse).caseInsensitive()
             
             
-            val file = parameters.originalFile as? AtomicFile
-            val imports: List<String> = file?.let { atomicFile ->
-                atomicFile.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
+            val atomicFile = parameters.originalFile as? AtomicFile
+            val imports: List<String> = atomicFile?.let { af ->
+                af.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
                     importsSection.importItemList.mapNotNull { importItem ->
                         importItem.node.findChildByType(AtomicTypes.IMPORT_PATH)?.text
                     }
@@ -919,6 +922,11 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val project = parameters.position.project
             val service = AtomicGenerationService.getInstance(project)
             
@@ -953,99 +961,6 @@ class AtomicCompletionContributor : CompletionContributor() {
         }
     }
     
-    override fun invokeAutoPopup(position: PsiElement, typeChar: Char): Boolean {
-        
-        if (typeChar.isLetter()) {
-            var parent = position.parent
-            while (parent != null && parent !is AtomicFile) {
-                if (parent is AtomicValuesSection) {
-                    
-                    val text = position.containingFile.text
-                    val offset = position.textOffset
-                    
-                    
-                    var i = offset - 1
-                    while (i >= 0 && text[i] != '\n' && text[i] != ':') {
-                        i--
-                    }
-                    
-                    if (i >= 0 && text[i] == ':') {
-                        return true
-                    }
-                }
-                parent = parent.parent
-            }
-            
-            
-            val text = position.containingFile.text
-            val offset = position.textOffset
-            
-            
-            var lineStart = offset
-            while (lineStart > 0 && text[lineStart - 1] != '\n' && text[lineStart - 1] != '\r') {
-                lineStart--
-            }
-            
-            val lineText = if (lineStart < offset) {
-                text.substring(lineStart, offset)
-            } else {
-                ""
-            }
-            
-            
-            if (lineText.contains("namespace:") || lineText.contains("entityType:") || lineText.trim().startsWith("-")) {
-                return true
-            }
-        }
-        
-        
-        if (typeChar == '/') {
-            val text = position.containingFile.text
-            val offset = position.textOffset
-            
-            
-            var lineStart = offset
-            while (lineStart > 0 && text[lineStart - 1] != '\n' && text[lineStart - 1] != '\r') {
-                lineStart--
-            }
-            
-            val lineText = if (lineStart < offset) {
-                text.substring(lineStart, offset)
-            } else {
-                ""
-            }
-            
-            if (lineText.contains("directory:")) {
-                return true
-            }
-        }
-        
-        
-        if (typeChar == '.') {
-            val text = position.containingFile.text
-            val offset = position.textOffset
-            
-            
-            var lineStart = offset
-            while (lineStart > 0 && text[lineStart - 1] != '\n' && text[lineStart - 1] != '\r') {
-                lineStart--
-            }
-            
-            val lineText = if (lineStart < offset) {
-                text.substring(lineStart, offset)
-            } else {
-                ""
-            }
-            
-            
-            if (lineText.contains("namespace:") || lineText.contains("entityType:") || lineText.trim().startsWith("-")) {
-                return true
-            }
-        }
-        
-        return super.invokeAutoPopup(position, typeChar)
-    }
-    
     private fun importPathPattern(): ElementPattern<PsiElement> {
         return PlatformPatterns.psiElement()
             .withParent(PlatformPatterns.psiElement(AtomicTypes.IMPORT_ITEM))
@@ -1057,6 +972,11 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val element = parameters.position
             val project = element.project
             val service = AtomicGenerationService.getInstance(project)
@@ -1101,9 +1021,18 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val project = parameters.position.project
             val projectBasePath = project.basePath ?: return
             val projectBaseDir = VfsUtil.findFileByIoFile(java.io.File(projectBasePath), true) ?: return
+            
+            if (!projectBaseDir.isValid) {
+                return
+            }
             
             
             val element = parameters.position
@@ -1141,8 +1070,8 @@ class AtomicCompletionContributor : CompletionContributor() {
                 projectBaseDir.findFileByRelativePath(parentPath.removeSuffix("/"))
             }
             
-            if (parentDir == null || !parentDir.isDirectory) {
-                println("DirectoryPathCompletionProvider: Parent directory not found or not a directory")
+            if (parentDir == null || !parentDir.isValid || !parentDir.isDirectory) {
+                println("DirectoryPathCompletionProvider: Parent directory not found, invalid, or not a directory")
                 return
             }
             
@@ -1150,7 +1079,7 @@ class AtomicCompletionContributor : CompletionContributor() {
             val resultWithPrefix = result.withPrefixMatcher(namePrefix).caseInsensitive()
             
             
-            parentDir.children.filter { it.isDirectory }.forEach { dir ->
+            parentDir.children.filter { it.isValid && it.isDirectory }.forEach { dir ->
                 val relativePath = VfsUtil.getRelativePath(dir, projectBaseDir) ?: return@forEach
                 
                 
@@ -1284,6 +1213,11 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val element = parameters.position
             val project = element.project
             val service = AtomicGenerationService.getInstance(project)
@@ -1322,9 +1256,9 @@ class AtomicCompletionContributor : CompletionContributor() {
             }
             
             
-            val file = parameters.originalFile as? AtomicFile
-            val imports: List<String> = file?.let { atomicFile ->
-                atomicFile.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
+            val atomicFile = parameters.originalFile as? AtomicFile
+            val imports: List<String> = atomicFile?.let { af ->
+                af.children.filterIsInstance<AtomicImportsSection>().firstOrNull()?.let { importsSection ->
                     importsSection.importItemList.mapNotNull { importItem ->
                         importItem.node.findChildByType(AtomicTypes.IMPORT_PATH)?.text
                     }

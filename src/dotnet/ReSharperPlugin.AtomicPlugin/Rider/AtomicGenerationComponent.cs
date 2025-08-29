@@ -51,7 +51,7 @@ namespace ReSharperPlugin.AtomicPlugin.Rider
             _typeValidator = new TypeValidator(symbolScopeManager);
             _namespaceResolver = new NamespaceResolver(symbolScopeManager); 
             _projectManager = new Services.ProjectManager(solution);
-            _fileSystemManager = new FileSystemManager(transactionManager, _projectManager);
+            _fileSystemManager = new FileSystemManagerAsync(_projectManager, solution);
             _configMapper = new ConfigurationMapper();
             _usageFinder = new UsageFinder(solution, extensionMethodDetector);
             

@@ -22,3 +22,4 @@ output
 _ReSharper*
 _dotTrace*
 nul
+.claude/settings.local.json

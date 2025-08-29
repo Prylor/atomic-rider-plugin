@@ -38,7 +38,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             {
                 var tcs = new TaskCompletionSource<List<MethodUsageLocation>>();
 
-                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
+                var _ = _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     try
                     {
@@ -174,7 +174,7 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             {
                 var tcs = new TaskCompletionSource<List<MethodUsageLocation>>();
 
-                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
+                var _ = _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     try
                     {
