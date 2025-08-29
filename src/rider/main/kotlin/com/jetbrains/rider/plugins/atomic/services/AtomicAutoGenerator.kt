@@ -139,22 +139,13 @@ class AtomicAutoGenerator(private val project: Project) {
                     config.className
                 )
                 
-                LOG.info("AtomicAutoGenerator: Generating code for ${atomicFile.name}")
-                val generatedCode = generationService.generateApi(atomicFile)
-                if (generatedCode == null) {
-                    LOG.error("AtomicAutoGenerator: Failed to generate code")
-                    return@launch
-                }
-                LOG.info("AtomicAutoGenerator: Code generated successfully, length: ${generatedCode.length}")
-                
-                val atomicFileName = withContext(Dispatchers.Main) {
-                    ReadAction.compute<String, Exception> {
-                        atomicFile.name
-                    }
-                }
-                
                 val outputPath = calculateOutputPath(atomicVirtualFile, config)
                 if (outputPath == null) {
+                    val atomicFileName = withContext(Dispatchers.Main) {
+                        ReadAction.compute<String, Exception> {
+                            atomicFile.name
+                        }
+                    }
                     showNotification(
                         "Failed to calculate output path for $atomicFileName",
                         NotificationType.ERROR
@@ -167,6 +158,20 @@ class AtomicAutoGenerator(private val project: Project) {
                     LOG.info("AtomicAutoGenerator: Generated file does not exist at ${outputPath.absolutePath}, skipping auto-generation")
                     LOG.info("AtomicAutoGenerator: Use Ctrl+Shift+G to generate the file for the first time")
                     return@launch
+                }
+                
+                LOG.info("AtomicAutoGenerator: Generating code for ${atomicFile.name}")
+                val generatedCode = generationService.generateApi(atomicFile)
+                if (generatedCode == null) {
+                    LOG.error("AtomicAutoGenerator: Failed to generate code")
+                    return@launch
+                }
+                LOG.info("AtomicAutoGenerator: Code generated successfully, length: ${generatedCode.length}")
+                
+                val atomicFileName = withContext(Dispatchers.Main) {
+                    ReadAction.compute<String, Exception> {
+                        atomicFile.name
+                    }
                 }
                 
                 val generatedFile = writeGeneratedFile(outputPath, generatedCode)
