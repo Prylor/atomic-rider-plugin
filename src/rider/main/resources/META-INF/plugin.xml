@@ -140,6 +140,10 @@
     <!-- File Templates -->
     <fileTemplateGroup
         implementation="com.jetbrains.rider.plugins.atomic.fileTemplates.AtomicFileTemplateProvider"/>
+    
+    <!-- Editor notification for generate button -->
+    <editorNotificationProvider
+        implementation="com.jetbrains.rider.plugins.atomic.editor.AtomicEditorNotificationProvider"/>
   </extensions>
   
   <applicationListeners>
