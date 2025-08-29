@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Application.Parts;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
+using JetBrains.DataFlow;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.DocumentModel;
 using JetBrains.Lifetimes;
@@ -165,7 +167,7 @@ namespace ReSharperPlugin.AtomicPlugin.Rider
                 await _fileSystemManager.CreateOrUpdateFile(fileData.FilePath, config, generatedCode);
                 
                 
-                _solution.Locks.ExecuteOrQueue(Lifetime.Eternal, "Update generation status", () =>
+                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     var model = _solution.GetProtocolSolution().GetAtomicGenerationModel();
                     model.GenerationStatus($"Generated API for {config.Values.Count} values");
@@ -378,7 +380,7 @@ namespace ReSharperPlugin.AtomicPlugin.Rider
         {
             return await Task.Run(() =>
             {
-                _solution.Locks.ExecuteOrQueueReadLockEx(Lifetime.Eternal, "UpdateMethodUsage", () =>
+                _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                 {
                     try
                     {
@@ -499,7 +501,7 @@ namespace ReSharperPlugin.AtomicPlugin.Rider
                 
                 await Task.Run(() =>
                 {
-                    _solution.Locks.ExecuteOrQueueReadLockEx(Lifetime.Eternal, "RefreshFile", () =>
+                    _solution.Locks.Tasks.StartNew(Lifetime.Eternal, Scheduling.MainGuard, () =>
                     {
                         var filePath = FileSystemPath.Parse(atomicFilePath);
                         var fileInfo = new System.IO.FileInfo(atomicFilePath);

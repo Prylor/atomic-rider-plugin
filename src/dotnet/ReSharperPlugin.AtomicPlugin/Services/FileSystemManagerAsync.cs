@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
 using JetBrains.Application.Threading.Tasks;
+using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.DocumentModel;
@@ -110,9 +111,9 @@ namespace ReSharperPlugin.AtomicPlugin.Services
         {
             await Task.Run(() =>
             {
-                _solution.Locks.ExecuteOrQueueEx(
+                _solution.Locks.Tasks.StartNew(
                     Lifetime.Eternal,
-                    "UpdateAtomicFile",
+                    Scheduling.MainGuard,
                     () =>
                     {
                         using (WriteLockCookie.Create())
@@ -150,9 +151,9 @@ namespace ReSharperPlugin.AtomicPlugin.Services
         {
             await Task.Run(() =>
             {
-                _solution.Locks.ExecuteOrQueueEx(
+                _solution.Locks.Tasks.StartNew(
                     Lifetime.Eternal,
-                    "CommitDocuments",
+                    Scheduling.MainGuard,
                     () =>
                     {
                         using (ReadLockCookie.Create())
