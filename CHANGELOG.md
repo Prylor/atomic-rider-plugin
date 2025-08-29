@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-08-30
+
+### Changed
+- **BREAKING**: Removed `header` keyword from atomic file syntax
+- Updated code generation to use runtime initialization with `NameToId(nameof())` pattern
+- Replaced compile-time hash constants with runtime field initialization
+- Added Unity Editor support with conditional compilation directives
+- Changed parameter name from 'obj' to 'entity' in generated extension methods
+- Added #region blocks for better code organization in generated files
+
+### Added
+- Separation between manual generation (Ctrl+Shift+G) and auto-regeneration
+- Manual generation now required for first-time file creation
+- Auto-regeneration only updates existing files, won't create new ones
+- Always include `Atomic.Entities` namespace in generated code
+- Static constructor for field initialization in generated classes
+- `[InitializeOnLoad]` attribute for Unity Editor compatibility
+
+### Fixed
+- Prevent auto-generation from creating new files
+- Fixed compilation errors after header removal
+
+### Removed
+- `header` property from atomic file syntax (no longer supported)
+- Hash-based ID generation in favor of framework's `NameToId` method
+
+### Documentation
+- Clarified manual vs automatic generation workflow
+- Updated examples to remove header references
+- Added clear instructions for first-time generation requirement
+
 ## [0.1.3] - 2025-08-30
 
 ### Fixed
