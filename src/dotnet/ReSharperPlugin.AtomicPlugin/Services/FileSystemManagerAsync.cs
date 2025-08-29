@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.DocumentModel;
@@ -27,7 +28,6 @@ namespace ReSharperPlugin.AtomicPlugin.Services
         private static readonly ILogger Logger = JetBrains.Util.Logging.Logger.GetLogger<FileSystemManagerAsync>();
         private readonly IProjectManager _projectManager;
         private readonly ISolution _solution;
-        private readonly DirectFileWriter _directFileWriter;
         private readonly SemaphoreSlim _fileOperationSemaphore = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<string, DateTime> _lastGenerationTime = new ConcurrentDictionary<string, DateTime>();
 
@@ -35,7 +35,6 @@ namespace ReSharperPlugin.AtomicPlugin.Services
         {
             _projectManager = projectManager;
             _solution = solution;
-            _directFileWriter = new DirectFileWriter(solution);
         }
 
         public async Task CreateOrUpdateFile(string atomicFilePath, AtomicEntityApiConfig config, string generatedCode)
@@ -142,17 +141,9 @@ namespace ReSharperPlugin.AtomicPlugin.Services
 
             Logger.Info($"Creating new file at: {outputPath}");
             
-            var success = await _directFileWriter.WriteFileDirectlyAsync(targetProject, outputPath, generatedCode)
-                .ConfigureAwait(false);
+            await AddFileUsingAddNewItemHelperAsync(targetProject, outputPath, generatedCode).ConfigureAwait(false);
             
-            if (success)
-            {
-                Logger.Info($"Successfully created file: {outputPath}");
-            }
-            else
-            {
-                throw new InvalidOperationException($"Failed to create file: {outputPath}");
-            }
+            Logger.Info($"Successfully created file: {outputPath}");
         }
 
         private async Task CommitDocumentsAsync()
@@ -265,14 +256,110 @@ namespace ReSharperPlugin.AtomicPlugin.Services
             return atomicPath.Parent.Combine(outputFileName);
         }
 
+        private async Task AddFileUsingAddNewItemHelperAsync(IProject targetProject, FileSystemPath filePath, string generatedCode)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            
+            _solution.Locks.Tasks.StartNew(
+                _solution.GetSolutionLifetimes().UntilSolutionCloseLifetime,
+                Scheduling.MainGuard,
+                () =>
+                {
+                    try
+                    {
+                        using (WriteLockCookie.Create())
+                        {
+                            var existingFile = targetProject.GetAllProjectFiles()
+                                .FirstOrDefault(f => f.Location.Equals(filePath));
+                            
+                            if (existingFile != null)
+                            {
+                                Logger.Info($"File already exists in project: {filePath}");
+                                tcs.TrySetResult(true);
+                                return;
+                            }
+                            
+                            var parentFolder = GetOrCreateProjectFolder(targetProject, filePath.Directory);
+                            if (parentFolder == null)
+                            {
+                                Logger.Error($"Could not get or create folder for path: {filePath.Directory}");
+                                tcs.TrySetException(new InvalidOperationException($"Could not create folder structure for: {filePath.Directory}"));
+                                return;
+                            }
+                            
+                            Logger.Info($"Adding file using AddNewItemHelper: {filePath}");
+                            var projectFile = AddNewItemHelper.AddFile(
+                                parentFolder,
+                                filePath.Name,
+                                generatedCode
+                            );
+                            
+                            if (projectFile != null)
+                            {
+                                Logger.Info($"Successfully added file to project: {targetProject.Name}");
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                Logger.Error($"AddNewItemHelper.AddFile returned null");
+                                tcs.TrySetException(new InvalidOperationException("AddNewItemHelper.AddFile failed"));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Error adding file to project: {ex.Message}", ex);
+                        tcs.TrySetException(ex);
+                    }
+                });
+            
+            var result = await tcs.Task.ConfigureAwait(false);
+            if (!result)
+            {
+                throw new InvalidOperationException($"Failed to add file to project: {filePath}");
+            }
+        }
+
         private IProjectFolder GetOrCreateProjectFolder(IProject project, FileSystemPath directory)
         {
             if (project == null || directory.IsEmpty)
                 return null;
             
-            var projectLocation = project.ProjectFileLocation.Directory;
+            var projectLocation = project.Location.ToNativeFileSystemPath();
             
-            return project;
+            if (!projectLocation.IsPrefixOf(directory))
+            {
+                return project;
+            }
+            
+            var relativePath = directory.MakeRelativeTo(projectLocation);
+            var folders = relativePath.Components.ToArray();
+            
+            IProjectFolder currentFolder = project;
+            foreach (var folderName in folders)
+            {
+                if (string.IsNullOrEmpty(folderName.ToString()) || folderName == ".")
+                    continue;
+                
+                var path = currentFolder.Location.Combine(folderName.ToString());
+                
+                try
+                {
+                    currentFolder = currentFolder.GetOrCreateProjectFolder(path);
+                    if (currentFolder == null)
+                    {
+                        Logger.Error($"Failed to create folder: {path}");
+                        return null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error creating folder {path}: {ex.Message}");
+                    return null;
+                }
+            }
+            
+            return currentFolder;
         }
 
         private string NormalizeLineEndings(string text, IDocument document)
