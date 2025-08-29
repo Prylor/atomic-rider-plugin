@@ -1,5 +1,8 @@
 package com.jetbrains.rider.plugins.atomic.services
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
@@ -8,6 +11,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.jetbrains.rider.plugins.atomic.settings.AtomicPluginSettings
+import kotlinx.coroutines.*
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 @Service(Service.Level.PROJECT)
@@ -43,9 +48,6 @@ class GeneratedFileTracker(private val project: Project) : PersistentStateCompon
         myState = state
     }
     
-    /**
-     * Track a newly generated file
-     */
     fun trackGeneratedFile(
         atomicFile: VirtualFile,
         generatedFile: VirtualFile,
@@ -92,14 +94,31 @@ class GeneratedFileTracker(private val project: Project) : PersistentStateCompon
     }
 
     private fun deleteOldGeneratedFile(filePath: String) {
-        val fileUrl = VirtualFileManager.constructUrl("file", filePath)
-        val file = VirtualFileManager.getInstance().findFileByUrl(fileUrl)
-        
-        if (file != null && file.exists()) {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
-                file.delete(this)
-            } catch (e: Exception) {
+                val file = File(filePath)
+                if (file.exists()) {
+                    if (file.delete()) {
+                        println("Deleted old generated file using File API: $filePath")
+                        return@launch
+                    }
+                }
                 
+                ApplicationManager.getApplication().invokeLater {
+                    runWriteAction {
+                        try {
+                            val fileUrl = VirtualFileManager.constructUrl("file", filePath)
+                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(fileUrl)
+                            if (virtualFile != null && virtualFile.exists()) {
+                                virtualFile.delete(this@GeneratedFileTracker)
+                                println("Deleted old generated file using VirtualFile API: $filePath")
+                            }
+                        } catch (e: Exception) {
+                            println("Failed to delete old generated file: $filePath - ${e.message}")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
                 println("Failed to delete old generated file: $filePath - ${e.message}")
             }
         }
