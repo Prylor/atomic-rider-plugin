@@ -15,6 +15,7 @@ import com.jetbrains.rider.plugins.atomic.psi.impl.AtomicPsiImplUtil
 import com.jetbrains.rider.plugins.atomic.services.AtomicAutoGenerator
 import com.jetbrains.rider.plugins.atomic.services.AtomicFileValidator
 import com.jetbrains.rider.plugins.atomic.services.GeneratedFileTracker
+import com.jetbrains.rider.plugins.atomic.settings.AtomicPluginSettings
 import java.io.File
 import java.nio.file.Paths
 import java.util.function.Function
@@ -37,6 +38,7 @@ class AtomicEditorNotificationProvider : EditorNotificationProvider {
             val validator = AtomicFileValidator.getInstance(project)
             val tracker = GeneratedFileTracker.getInstance(project)
             val autoGenerator = AtomicAutoGenerator.getInstance(project)
+            val settings = AtomicPluginSettings.getInstance(project)
             
             val hasErrors = validator.hasErrors(psiFile)
             if (hasErrors) {
@@ -63,14 +65,34 @@ class AtomicEditorNotificationProvider : EditorNotificationProvider {
             val panel = EditorNotificationPanel(fileEditor, EditorNotificationPanel.Status.Info)
             
             if (generatedFileExists) {
-                panel.text = "API file exists. Auto-generation enabled - file will update on changes. Click to regenerate manually or use Ctrl+Shift+G"
+                val autoGenStatus = if (settings.autoGenerateEnabled) {
+                    "Auto-generation enabled - file will update on save"
+                } else {
+                    "Auto-generation disabled - use manual generation"
+                }
+                panel.text = "API file exists. $autoGenStatus. Click to regenerate manually or use Ctrl+Shift+G"
                 panel.createActionLabel("Regenerate API") {
                     autoGenerator.generateManually(psiFile)
                 }
             } else {
-                panel.text = "No generated API file found. Auto-generation will start after first manual generation. Click to generate or use Ctrl+Shift+G"
+                val autoGenInfo = if (settings.autoGenerateEnabled) {
+                    "Auto-generation will start after first manual generation"
+                } else {
+                    "Auto-generation is disabled in settings"
+                }
+                panel.text = "No generated API file found. $autoGenInfo. Click to generate or use Ctrl+Shift+G"
                 panel.createActionLabel("Generate API") {
                     autoGenerator.generateManually(psiFile)
+                }
+            }
+            
+            // Add settings link if auto-generation is disabled
+            if (!settings.autoGenerateEnabled) {
+                panel.createActionLabel("Configure Settings") {
+                    com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(
+                        project,
+                        "Atomic Plugin"
+                    )
                 }
             }
             

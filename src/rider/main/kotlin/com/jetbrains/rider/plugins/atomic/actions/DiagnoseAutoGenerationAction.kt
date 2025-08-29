@@ -45,7 +45,6 @@ class DiagnoseAutoGenerationAction : AnAction("Diagnose Auto Generation") {
         diagnostics.appendLine("Settings:")
         diagnostics.appendLine("  Auto-generate enabled: ${settings.autoGenerateEnabled}")
         diagnostics.appendLine("  Show notifications: ${settings.showNotifications}")
-        diagnostics.appendLine("  Delete old files: ${settings.deleteOldFilesOnDirectoryChange}")
         diagnostics.appendLine("  Debounce delay: ${settings.debounceDelayMs}ms")
         diagnostics.appendLine()
         

@@ -60,11 +60,8 @@ class GeneratedFileTracker(private val project: Project) : PersistentStateCompon
         
         val oldInfo = myState.trackedFiles[atomicPath]
         if (oldInfo != null && oldInfo.generatedFilePath != generatedPath) {
-            
-            val settings = AtomicPluginSettings.getInstance(project)
-            if (settings.deleteOldFilesOnDirectoryChange) {
-                deleteOldGeneratedFile(oldInfo.generatedFilePath)
-            }
+            // Note: Automatic deletion of old files is disabled
+            // Users must manually delete old generated files when output path changes
         }
         
         

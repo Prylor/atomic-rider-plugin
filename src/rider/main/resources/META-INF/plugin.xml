@@ -144,6 +144,14 @@
     <!-- Editor notification for generate button -->
     <editorNotificationProvider
         implementation="com.jetbrains.rider.plugins.atomic.editor.AtomicEditorNotificationProvider"/>
+    
+    <!-- Settings/Preferences page -->
+    <projectConfigurable
+        parentId="tools"
+        instance="com.jetbrains.rider.plugins.atomic.settings.AtomicPluginConfigurable"
+        id="com.jetbrains.rider.plugins.atomic.settings"
+        displayName="Atomic Plugin"
+        nonDefaultProject="true"/>
   </extensions>
   
   <applicationListeners>

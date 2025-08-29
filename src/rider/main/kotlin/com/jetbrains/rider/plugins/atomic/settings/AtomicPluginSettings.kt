@@ -16,7 +16,6 @@ class AtomicPluginSettings : PersistentStateComponent<AtomicPluginSettings.State
     data class State(
         var autoGenerateEnabled: Boolean = true,
         var showNotifications: Boolean = true,
-        var deleteOldFilesOnDirectoryChange: Boolean = true,
         var debounceDelayMs: Long = 500L
     )
     
@@ -44,12 +43,6 @@ class AtomicPluginSettings : PersistentStateComponent<AtomicPluginSettings.State
         get() = myState.showNotifications
         set(value) {
             myState.showNotifications = value
-        }
-    
-    var deleteOldFilesOnDirectoryChange: Boolean
-        get() = myState.deleteOldFilesOnDirectoryChange
-        set(value) {
-            myState.deleteOldFilesOnDirectoryChange = value
         }
     
     var debounceDelayMs: Long
