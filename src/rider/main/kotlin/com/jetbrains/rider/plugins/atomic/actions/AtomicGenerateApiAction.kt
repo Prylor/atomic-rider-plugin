@@ -13,6 +13,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.jetbrains.rider.plugins.atomic.language.AtomicFileType
 import com.jetbrains.rider.plugins.atomic.psi.AtomicFile
+import com.jetbrains.rider.plugins.atomic.services.AtomicAutoGenerator
 import com.jetbrains.rider.plugins.atomic.services.AtomicGenerationService
 import kotlinx.coroutines.runBlocking
 
@@ -38,45 +39,20 @@ class AtomicGenerateApiAction : AnAction("Generate Entity API", "Generate C# API
             return
         }
         
+        // Use AtomicAutoGenerator for manual generation with forceCreate = true
+        val autoGenerator = AtomicAutoGenerator.getInstance(project)
+        autoGenerator.generateManually(psiFile)
+        
+        // Show success message
         val headerProperties = parseHeaderProperties(psiFile)
-        val namespace = headerProperties["namespace"] ?: "Generated"
         val className = headerProperties["className"] ?: "EntityApi"
         val directory = headerProperties["directory"] ?: ""
         
-        ApplicationManager.getApplication().executeOnPooledThread {
-            try {
-                val service = AtomicGenerationService.getInstance(project)
-                val generatedCode = runBlocking {
-                    service.generateApi(psiFile)
-                }
-                
-                if (generatedCode == null) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Failed to generate code", "Generation Error")
-                    }
-                    return@executeOnPooledThread
-                }
-                
-                ApplicationManager.getApplication().invokeLater {
-                    virtualFile.parent?.refresh(false, true)
-                    
-                    Messages.showInfoMessage(
-                        project,
-                        "Successfully generated ${className}.cs in ${directory.ifEmpty { "same directory" }}",
-                        "Generation Complete"
-                    )
-                }
-            } catch (ex: Exception) {
-                logger.error("Generation failed", ex)
-                ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog(
-                        project,
-                        "Generation failed: ${ex.message}\n\nCheck logs for details.",
-                        "Generation Error"
-                    )
-                }
-            }
-        }
+        Messages.showInfoMessage(
+            project,
+            "Generation started for ${className}.cs${if (directory.isNotEmpty()) " in $directory" else ""}.\n\nCheck notifications for result.",
+            "Generation Started"
+        )
     }
     
     override fun update(e: AnActionEvent) {

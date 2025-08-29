@@ -41,13 +41,37 @@ class AtomicAutoGenerator(private val project: Project) {
         private val LOG = Logger.getInstance(AtomicAutoGenerator::class.java)
     }
     
+    /**
+     * Manual generation - allows creating new files (called from Ctrl+Shift+G)
+     */
+    fun generateManually(atomicFile: AtomicFile) {
+        val fileName = atomicFile.name
+        val filePath = atomicFile.virtualFile?.path ?: "unknown"
+        LOG.info("AtomicAutoGenerator: generateManually called for $fileName at $filePath")
+        
+        // Call the internal generation method with forceCreate = true
+        performGeneration(atomicFile, forceCreate = true)
+    }
+    
+    /**
+     * Auto-generation - only updates existing files
+     */
     fun regenerateIfValid(atomicFile: AtomicFile) {
         val fileName = atomicFile.name
         val filePath = atomicFile.virtualFile?.path ?: "unknown"
         LOG.info("AtomicAutoGenerator: regenerateIfValid called for $fileName at $filePath")
         
+        // Call the internal generation method with forceCreate = false
+        performGeneration(atomicFile, forceCreate = false)
+    }
+    
+    private fun performGeneration(atomicFile: AtomicFile, forceCreate: Boolean) {
+        val fileName = atomicFile.name
+        val filePath = atomicFile.virtualFile?.path ?: "unknown"
+        LOG.info("AtomicAutoGenerator: performGeneration called for $fileName at $filePath, forceCreate=$forceCreate")
+        
         val settings = AtomicPluginSettings.getInstance(project)
-        if (!settings.autoGenerateEnabled) {
+        if (!forceCreate && !settings.autoGenerateEnabled) {
             LOG.info("AtomicAutoGenerator: Auto-generation is disabled in settings")
             return
         }
@@ -61,7 +85,7 @@ class AtomicAutoGenerator(private val project: Project) {
         if (commandProcessor.currentCommand != null) {
             LOG.info("AtomicAutoGenerator: Command in progress, scheduling for later")
             ApplicationManager.getApplication().invokeLater {
-                regenerateIfValid(atomicFile)
+                performGeneration(atomicFile, forceCreate)
             }
             return
         }
@@ -135,6 +159,13 @@ class AtomicAutoGenerator(private val project: Project) {
                         "Failed to calculate output path for $atomicFileName",
                         NotificationType.ERROR
                     )
+                    return@launch
+                }
+                
+                // For auto-generation, only update existing files, don't create new ones
+                if (!forceCreate && !outputPath.exists()) {
+                    LOG.info("AtomicAutoGenerator: Generated file does not exist at ${outputPath.absolutePath}, skipping auto-generation")
+                    LOG.info("AtomicAutoGenerator: Use Ctrl+Shift+G to generate the file for the first time")
                     return@launch
                 }
                 
