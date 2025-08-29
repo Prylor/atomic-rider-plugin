@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-08-30
+
+### Added
+- Editor notification panel at top of .atomic files for visual generation controls
+- Generate/Regenerate API button in notification panel based on file existence
+- Open Generated File action for quick navigation to generated code
+- Delete Generated File action with confirmation dialog
+- Auto-generation status information in notification panel
+- Smart detection of generated files using both tracker and calculated paths
+
+### Changed
+- Refactored code generation to use runtime initialization pattern
+- Updated generated code to always include `Atomic.Entities` namespace
+- Changed from compile-time hash constants to `NameToId(nameof())` pattern
+- Improved parameter naming from 'obj' to 'entity' in extension methods
+
+### Fixed
+- Fixed auto-generation creating new files when it shouldn't
+- Improved generated file detection in notification panel
+- Fixed forceCreate parameter not being properly passed in coroutine scope
+
+### Improved
+- Better user experience with visual generation controls
+- Clearer messaging about auto-generation behavior
+- More discoverable generation feature through UI elements
+
 ## [0.1.4] - 2025-08-30
 
 ### Changed
