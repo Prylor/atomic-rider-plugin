@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-08-30
+
+### Added
+- Complete plugin settings UI accessible from File → Settings → Tools → Atomic Plugin
+- Beautiful scrollable settings layout with visual controls
+- Visual debounce delay slider with real-time preview (100ms - 5s)
+- "Configure Settings" quick link in editor notification when auto-generation is disabled
+- Keyboard shortcuts quick reference section in settings
+- Example .atomic file format display in settings panel
+- Settings refresh trigger for editor notifications on apply
+
+### Changed
+- Updated editor notifications to show current auto-generation enabled/disabled status
+- Editor notification messages now dynamically reflect settings state
+- Improved settings UI structure with organized sections
+
+### Removed
+- Non-functional "Delete old files on directory change" option from settings
+
+### Fixed
+- Editor notifications now properly update when settings change
+
 ## [0.1.5] - 2025-08-30
 
 ### Added

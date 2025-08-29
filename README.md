@@ -1,6 +1,6 @@
 # Atomic Plugin for JetBrains Rider
 
-[![Version](https://img.shields.io/badge/version-0.1.5-blue.svg)](https://github.com/Prylor/atomic-rider-plugin)
+[![Version](https://img.shields.io/badge/version-0.1.6-blue.svg)](https://github.com/Prylor/atomic-rider-plugin)
 [![Rider](https://img.shields.io/badge/Rider-2025.1-orange.svg)](https://www.jetbrains.com/rider/)
 [![Atomic Framework](https://img.shields.io/badge/Atomic%20Framework-Compatible-brightgreen.svg)](https://github.com/StarKRE22/Atomic)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -187,6 +187,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Author**: Iaroslav Sarchuk
 
-**Version**: 0.1.5
+**Version**: 0.1.6
 
 **Compatibility**: JetBrains Rider 2025.1+
