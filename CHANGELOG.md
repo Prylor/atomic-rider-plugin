@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-08-30
+
+### Fixed
+- Fixed keyword autocompletion in atomic files that was broken in 0.1.1
+- Fixed deprecated `addBrowseFolderListener` API usage for Rider 2025.2 compatibility
+- Fixed file generation to use `AddNewItemHelper` for proper project integration and IntelliSense support
+- Fixed duplicate keyword suggestions in autocompletion (keywords already used in document are now filtered out)
+- Fixed async Consumer-based API compatibility for CreateAtomicFileAction in Rider 2025.2
+- Removed obsolete `getCommandName()` method override
+- Deleted unused AtomicTypedHandlerTest class
+
+### Added
+- Added FileSystemManagerAsync for async file operations to prevent RPC timeouts
+- Added DirectFileWriter for direct file writing without blocking operations
+- Added AtomicHighlighterFilter to prevent duplicate highlighter registrations
+- Added AtomicDocumentListener for proper document change handling
+- Added AtomicTypedHandler improvements for better auto-popup behavior
+- Added comprehensive unit tests for AtomicTypedHandler
+
+### Improved
+- Enhanced autocompletion validation for atomic files only
+- Improved async operation handling throughout the plugin
+- Better thread safety and EDT violation prevention
+- Smart filtering of already-used keywords in autocompletion
+
+### Technical
+- Resolved RPC timeout issues during file generation
+- Fixed duplicate highlighter registration prevention
+- Improved compatibility with Rider 2025.2
+- Enhanced file generation with proper MSBuild project integration
+
 ## [0.1.1] - 2025-08-29
 
 ### Fixed

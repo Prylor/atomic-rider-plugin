@@ -104,4 +104,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Version**: 0.1.1 | **Author**: Iaroslav Sarchuk | **Compatibility**: Rider 2025.1+
+**Version**: 0.1.2 | **Author**: Iaroslav Sarchuk | **Compatibility**: Rider 2025.1+
