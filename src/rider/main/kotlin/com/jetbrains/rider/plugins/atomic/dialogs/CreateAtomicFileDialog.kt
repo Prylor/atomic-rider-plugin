@@ -62,18 +62,13 @@ class CreateAtomicFileDialog(
         
         
         val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
-        descriptor.title = "Select Output Directory"
-        descriptor.description = "Choose directory for generated C# file (relative to project root)"
+            .withTitle("Select Output Directory")
+            .withDescription("Choose directory for generated C# file (relative to project root)")
         
         
         val projectBasePath = project.basePath
         
-        directoryField.addBrowseFolderListener(
-            "Select Directory",
-            "Select output directory for generated C# file (relative to project root)",
-            project,
-            descriptor
-        )
+        directoryField.addBrowseFolderListener(project, descriptor)
         
         
         directoryField.textField.addActionListener {

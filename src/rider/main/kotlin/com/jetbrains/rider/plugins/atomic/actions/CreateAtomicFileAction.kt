@@ -30,11 +30,16 @@ class CreateAtomicFileAction : CreateElementActionBase(
         private val LOG = Logger.getInstance(CreateAtomicFileAction::class.java)
     }
     
-    override fun invokeDialog(project: Project, directory: PsiDirectory): Array<PsiElement> {
+    override fun invokeDialog(
+        project: Project,
+        directory: PsiDirectory,
+        elementsConsumer: java.util.function.Consumer<in Array<PsiElement>>
+    ) {
         val dialog = CreateAtomicFileDialog(project, directory.virtualFile.path)
         
         if (!dialog.showAndGet()) {
-            return PsiElement.EMPTY_ARRAY
+            elementsConsumer.accept(PsiElement.EMPTY_ARRAY)
+            return
         }
         
         val result = dialog.getResult()
@@ -113,7 +118,7 @@ class CreateAtomicFileAction : CreateElementActionBase(
             }
         }
         
-        return arrayOf(file)
+        elementsConsumer.accept(arrayOf(file))
     }
     
     override fun create(newName: String, directory: PsiDirectory): Array<PsiElement> {
@@ -123,10 +128,6 @@ class CreateAtomicFileAction : CreateElementActionBase(
     
     override fun getErrorTitle(): String {
         return "Cannot Create Atomic File"
-    }
-    
-    override fun getCommandName(): String {
-        return "Create Atomic File"
     }
     
     override fun getActionName(directory: PsiDirectory, newName: String): String {
