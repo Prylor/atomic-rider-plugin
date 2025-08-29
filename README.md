@@ -50,7 +50,9 @@ This plugin generates extension methods that seamlessly integrate with Atomic Fr
 
 1. Right-click on your project folder
 2. Select `New` → `Atomic File`
-3. Configure your entity API:
+3. Configure your entity API
+4. **Press `Ctrl+Shift+G` to generate the C# file for the first time**
+5. After initial generation, changes will auto-update the file (if enabled)
 
 ```atomic
 entityType: "Entity"
@@ -77,8 +79,12 @@ values:
 
 ### Generating Code
 
-- **Manual**: Press `Ctrl+Shift+G` while in an `.atomic` file
-- **Automatic**: Code regenerates automatically when you save changes (if enabled)
+- **Manual Generation**: Press `Ctrl+Shift+G` while in an `.atomic` file
+  - **Required for first-time generation** - Creates the initial C# file
+  - Can be used anytime to force regeneration
+- **Automatic Regeneration**: Updates existing C# files automatically when you save changes
+  - **Only works for existing files** - Won't create new files
+  - Enable/disable in plugin settings
 
 ### Generated Methods
 
@@ -111,7 +117,6 @@ Access settings via `File` → `Settings` → `Tools` → `Atomic Plugin`
 
 | Property | Description | Required |
 |----------|-------------|----------|
-| `header` | Custom header text for generated file | No |
 | `entityType` | Base entity type (e.g., Entity, GameObject) | Yes |
 | `namespace` | C# namespace for generated code | Yes |
 | `className` | Name of the generated static class | Yes |
