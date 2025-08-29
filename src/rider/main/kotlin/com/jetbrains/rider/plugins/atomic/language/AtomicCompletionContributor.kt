@@ -23,14 +23,6 @@ import com.intellij.openapi.vfs.VfsUtil
 
 class AtomicCompletionContributor : CompletionContributor() {
     
-    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
-        val file = parameters.originalFile
-        if (file.virtualFile?.extension != "atomic") {
-            return
-        }
-        super.fillCompletionVariants(parameters, result)
-    }
-    
     companion object {
         fun addImportToAtomicFile(project: Project, document: Document, namespace: String) {
             val virtualFile = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getFile(document)
@@ -281,12 +273,14 @@ class AtomicCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
+            val originalFile = parameters.originalFile
+            if (originalFile !is AtomicFile || !originalFile.isValid || originalFile.virtualFile?.extension != "atomic") {
+                return
+            }
+            
             val element = parameters.position
             val file = element.containingFile as? AtomicFile ?: return
             
-            if (!file.isValid || file.virtualFile?.extension != "atomic") {
-                return
-            }
             val prefix = result.prefixMatcher.prefix
             
             println("AtomicCompletion: Triggered with prefix='$prefix', element=${element.javaClass.simpleName}")
@@ -367,7 +361,26 @@ class AtomicCompletionContributor : CompletionContributor() {
                     "values" to "Define entity values"
                 )
                 
+                // Check which keywords are already used in the document
+                val usedKeywords = mutableSetOf<String>()
+                val documentText = file.text
+                
+                // Check for each keyword with colon (e.g., "header:", "namespace:")
+                allKeywords.keys.forEach { keyword ->
+                    // Use regex to check if keyword exists at the beginning of a line followed by colon
+                    val pattern = Regex("^\\s*$keyword\\s*:", RegexOption.MULTILINE)
+                    if (pattern.containsMatchIn(documentText)) {
+                        usedKeywords.add(keyword)
+                        println("AtomicCompletion: Keyword '$keyword' already used, skipping")
+                    }
+                }
+                
                 allKeywords.forEach { (keyword, description) ->
+                    // Skip keywords that are already used
+                    if (keyword in usedKeywords) {
+                        return@forEach
+                    }
+                    
                     result.addElement(
                         LookupElementBuilder.create(keyword)
                             .withIcon(AtomicIcons.FILE)
