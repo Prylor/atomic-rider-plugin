@@ -55,16 +55,17 @@ This plugin generates extension methods that seamlessly integrate with Atomic Fr
 5. After initial generation, changes will auto-update the file (if enabled)
 
 ```atomic
-entityType: "Entity"
-namespace: "MyGame.Components"
-className: "EntityExtensions"
-directory: "Generated"
+entityType: IEntity
+namespace: MyGame.Components
+className: EntityExtensions
+directory: Assets/Scripts
 aggressiveInlining: true
 unsafe: false
 
 imports:
     System
     UnityEngine
+    Atomic.Entities
 
 tags:
     Player
@@ -109,9 +110,8 @@ For **Values**:
 Access settings via `File` → `Settings` → `Tools` → `Atomic Plugin`
 
 - **Auto-generate**: Enable/disable automatic regeneration
-- **Show notifications**: Toggle generation notifications
 - **Debounce delay**: Set delay before auto-generation (ms)
-- **Delete old files**: Remove old generated files when directory changes
+- **Show notifications**: Toggle generation notifications
 
 ### Atomic File Properties
 
@@ -135,9 +135,6 @@ cd atomic-rider-plugin
 
 # Build the plugin
 ./gradlew buildPlugin
-
-# Run tests
-./gradlew test
 
 # Run Rider with plugin
 ./gradlew runIde
@@ -172,11 +169,6 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- JetBrains for the excellent Rider IDE and plugin SDK
-- The Atomic community for inspiration and feedback
 
 ## 📞 Support
 
